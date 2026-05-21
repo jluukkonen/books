@@ -18,13 +18,9 @@ def extract_publisher(dataset: str, standard: str):
         q =  (globals()[dataset]
             .filter(c('field_code') == '264', c('subfield_code') == 'b')
        )
+        # potentially in
         # dnb 770$d
         # kbse 810$b 599$a 856$3
-
-    # elif standard == 'marc21' and dataset == 'gnd':
-    #     q =  (globals()[dataset]
-    #         .filter(c('field_code') == '264', c('subfield_code') == 'b')
-    #    )
     
     elif standard == 'marc21' and dataset == 'viaf':
         q =  (globals()[dataset]
