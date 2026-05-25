@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vetting the HRE: Censorship & Book Trade Network (1500-1800)</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS Dependencies -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="index.css">
+    
+    <!-- JS Dependencies (from CDN for ease of hosting) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Filter Controls & Info panel -->
+        <aside class="sidebar">
+            <div class="brand">
+                <h1>Vetting the HRE</h1>
+                <span class="subtitle">300 Years of Book Censorship (1500–1800)</span>
+            </div>
+            
+            <!-- Controls Box -->
+            <div class="panel controls-panel">
+                <h2>Controls & Filters</h2>
+                
+                <!-- Search bar -->
+                <div class="control-group">
+                    <label for="search-input">Search Censor / Publisher</label>
+                    <input type="text" id="search-input" placeholder="Type a name (e.g. Tanner, Eder)..." autocomplete="off">
+                    <div id="search-results" class="search-results-dropdown hidden"></div>
+                </div>
+                
+                <!-- Edge Weight Slider -->
+                <div class="control-group">
+                    <div class="slider-header">
+                        <label for="weight-slider">Min Edge Weight (Books Vetted)</label>
+                        <span id="weight-value" class="badge">4</span>
+                    </div>
+                    <input type="range" id="weight-slider" min="2" max="15" value="4" step="1">
+                    <span class="control-help">Higher values reduce clutter and show major hubs.</span>
+                </div>
+                
+                <!-- Jesuit Only toggle -->
+                <div class="control-group checkbox-group">
+                    <input type="checkbox" id="jesuit-checkbox">
+                    <label for="jesuit-checkbox">Show Jesuit Censors Only</label>
+                </div>
+                
+                <!-- Reset Button -->
+                <button id="reset-button" class="btn btn-secondary">Reset Visualization</button>
+            </div>
+            
+            <!-- Dynamic Info Box -->
+            <div class="panel info-panel" id="info-panel">
+                <div class="info-placeholder" id="info-placeholder">
+                    <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="placeholder-icon">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <p>Click on any node in the network or a city on the map to inspect its details and metrics.</p>
+                </div>
+                <div class="info-content hidden" id="info-content">
+                    <h3 id="info-name">Actor Name</h3>
+                    <div class="tag-row">
+                        <span id="info-tag-type" class="badge badge-type">Censor</span>
+                        <span id="info-tag-jesuit" class="badge badge-jesuit hidden">Jesuit</span>
+                    </div>
+                    
+                    <div class="info-section" id="section-gnd">
+                        <h4>GND Authority link</h4>
+                        <a href="#" id="info-gnd-link" target="_blank" class="gnd-link">GND ID</a>
+                    </div>
+                    
+                    <div class="info-section" id="section-occupations">
+                        <h4>Occupations / Background</h4>
+                        <p id="info-occupations">Professor of theology, Jesuit priest.</p>
+                    </div>
+                    
+                    <div class="info-section" id="section-biography">
+                        <h4>Biographical Notes</h4>
+                        <p id="info-biography">Born 1572 in Munich, taught at Ingolstadt, died 1632.</p>
+                    </div>
+                    
+                    <div class="info-section" id="section-stats">
+                        <h4>Degree Centrality</h4>
+                        <p>This actor is connected to <strong id="info-degree">12</strong> other nodes in the active graph.</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Panel Content -->
+        <main class="main-content">
+            <!-- Top Navigation Tab Bar -->
+            <nav class="tabs-bar">
+                <button class="tab-button active" data-tab="network-tab">Bipartite Network</button>
+                <button class="tab-button" data-tab="map-tab">Geographic Map</button>
+                <button class="tab-button" data-tab="timeline-tab">300-Year Timelines</button>
+            </nav>
+            
+            <!-- Tab Contents -->
+            <div class="tab-container">
+                <!-- TAB 1: NETWORK -->
+                <div class="tab-content active" id="network-tab">
+                    <div class="network-legend">
+                        <span class="legend-item"><span class="legend-dot color-censor"></span>Censor (Non-Jesuit/Unresolved)</span>
+                        <span class="legend-item"><span class="legend-dot color-jesuit"></span>Censor (Jesuit)</span>
+                        <span class="legend-item"><span class="legend-dot color-pub"></span>Publisher / Printer</span>
+                        <span class="legend-item"><span class="legend-line"></span>Vetting Connection</span>
+                    </div>
+                    <div id="network-container" class="viz-container">
+                        <div class="loading-overlay" id="network-loading">
+                            <div class="spinner"></div>
+                            <p>Loading network graph...</p>
+                        </div>
+                        <svg id="network-svg" width="100%" height="100%"></svg>
+                    </div>
+                </div>
+                
+                <!-- TAB 2: GEOGRAPHIC MAP -->
+                <div class="tab-content" id="map-tab">
+                    <div class="map-controls">
+                        <div class="slider-container">
+                            <div class="slider-header">
+                                <span>Timeline Slider (1500–1800)</span>
+                                <span id="map-year-label" class="badge">Decade: 1610s</span>
+                            </div>
+                            <input type="range" id="map-year-slider" min="1500" max="1790" value="1610" step="10">
+                            <div class="slider-ticks">
+                                <span>1500</span>
+                                <span>1550</span>
+                                <span>1600</span>
+                                <span>1650</span>
+                                <span>1700</span>
+                                <span>1750</span>
+                                <span>1800</span>
+                            </div>
+                        </div>
+                        <div class="map-legend">
+                            <span class="legend-item"><span class="legend-dot color-catholic-hub"></span>Catholic printing hubs</span>
+                            <span class="legend-item"><span class="legend-dot color-protestant-hub"></span>Protestant printing hubs</span>
+                            <span class="legend-item"><span class="legend-dot color-mixed-hub"></span>Mixed printing hubs</span>
+                        </div>
+                    </div>
+                    <div id="map-container" class="viz-container"></div>
+                </div>
+                
+                <!-- TAB 3: TIMELINES -->
+                <div class="tab-content" id="timeline-tab">
+                    <div class="charts-grid">
+                        <!-- Chart 1: Leipzig vs Frankfurt -->
+                        <div class="chart-card">
+                            <h3>Leipzig vs. Frankfurt Book output</h3>
+                            <p class="chart-desc">The long-term shift in dominance from the late 16th century to the late 18th century.</p>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-leipzig-frankfurt"></canvas>
+                            </div>
+                        </div>
+                        <!-- Chart 2: Confessional Shares -->
+                        <div class="chart-card">
+                            <h3>Printing output by Confessional Geography</h3>
+                            <p class="chart-desc">Protestant hubs vs. Catholic hubs vs. Mixed hubs (1500–1790).</p>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-confessional"></canvas>
+                            </div>
+                        </div>
+                        <!-- Chart 3: Language distribution -->
+                        <div class="chart-card">
+                            <h3>Language Shift: % Vernacular German</h3>
+                            <p class="chart-desc">Ratio of German (vs. Latin) publications in Protestant, Catholic, and Mixed hubs.</p>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-language"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Custom JS Application Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
