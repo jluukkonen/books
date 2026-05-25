@@ -265,5 +265,5 @@ append_mapping(
 #%%
 id_mappings_table = nw.concat(id_mappings)
 
-to_parquet("stable_id_mappings", id_mappings_table)
+persist_as_s3_parquet("stable_id_mappings", id_mappings_table)
 # %%
