@@ -960,18 +960,18 @@ function updateMapMarkers() {
         
         // 1. Draw glowing comparison outline of the previous decade FIRST (sits behind the solid marker)
         if (isSignificantChange) {
-            const outlineColor = isGrowth ? "#10b981" : "#ef4444"; // emerald green for growth, crimson red for decline
-            const prevGlowClass = isGrowth ? "prev-marker-glow-growth" : "prev-marker-glow-decline";
+            const prevIconSize = prevRadius * 2.2;
+            const prevDivIcon = L.divIcon({
+                html: `<div class="prev-decade-ring ${isGrowth ? 'prev-ring-growth' : 'prev-ring-decline'}" 
+                            style="width:${prevIconSize}px; height:${prevIconSize}px;"></div>`,
+                className: 'custom-prev-ring',
+                iconSize: [prevIconSize, prevIconSize],
+                iconAnchor: [prevIconSize / 2, prevIconSize / 2]
+            });
             
-            const prevMarker = L.circleMarker(coords, {
-                radius: prevRadius,
-                fillColor: "transparent",
-                color: outlineColor,
-                weight: 2.0,
-                dashArray: "4, 6",
-                opacity: 0.75,
-                fillOpacity: 0,
-                className: prevGlowClass,
+            const prevMarker = L.marker(coords, {
+                icon: prevDivIcon,
+                zIndexOffset: -100, // Render behind the main city markers
                 interactive: false // Click events pass through to the main marker
             }).addTo(state.map);
             state.mapMarkers.push(prevMarker);

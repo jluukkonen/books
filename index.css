@@ -984,5 +984,32 @@ input[type="range"]::-webkit-slider-thumb:hover {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 
+/* Custom prev decade HTML marker ring */
+.custom-prev-ring {
+    background: transparent !important;
+    border: none !important;
+    pointer-events: none;
+}
+
+.prev-decade-ring {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: transparent;
+    box-sizing: border-box;
+    pointer-events: none;
+}
+
+.prev-ring-growth {
+    border: 2px dashed #10b981;
+    filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.8));
+}
+
+.prev-ring-decline {
+    border: 2px dashed #ef4444;
+    filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.8));
+}
+
+
 
 
