@@ -124,10 +124,10 @@ document.addEventListener("DOMContentLoaded", () => {
 // Load resources via Fetch
 async function loadData() {
     try {
-        const netResponse = await fetch('data/network.json');
+        const netResponse = await fetch('data/network.json?v=' + Date.now());
         state.networkData = await netResponse.json();
         
-        const timelineResponse = await fetch('data/timeline.csv');
+        const timelineResponse = await fetch('data/timeline.csv?v=' + Date.now());
         const csvText = await timelineResponse.text();
         state.timelineData = parseCSV(csvText);
         
