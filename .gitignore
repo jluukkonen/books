@@ -13,3 +13,9 @@ wheels/
 
 db_secret.yaml
 .history
+
+gsheets_credentials.json
+gsheets_authorized_user.json
+
+.Rhistory
+.vscode
