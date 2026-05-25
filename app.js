@@ -15,10 +15,11 @@ const state = {
     networkData: null,
     timelineData: null,
     
-    // D3 variables
-    svg: null,
-    simulation: null,
-    gContainer: null,
+    // 3D Graph variables
+    graph3D: null,
+    highlightNode: null,
+    highlightLinks: new Set(),
+    highlightCity: null,
     
     // Leaflet variables
     map: null,
@@ -175,6 +176,15 @@ function initTabs() {
             
             state.activeTab = targetTab;
             
+            // Pause/resume 3D force simulation based on active tab
+            if (state.graph3D) {
+                if (targetTab === 'network-tab') {
+                    state.graph3D.resumeAnimation();
+                } else {
+                    state.graph3D.pauseAnimation();
+                }
+            }
+            
             // Handle Leaflet re-size re-draw when switching to Map tab
             if (targetTab === 'map-tab' && state.map) {
                 setTimeout(() => {
@@ -248,6 +258,7 @@ function selectNode(nodeId) {
     if (!node) return;
     
     state.selectedNode = nodeId;
+    state.highlightCity = null; // Clear city selection
     updateInfoPanel(node);
     
     // Pan map to associated city if it exists
@@ -312,29 +323,36 @@ function selectNode(nodeId) {
         }
     }
     
-    // Highlight in D3 svg
-    d3.selectAll('.node').classed('selected', n => n.id === nodeId);
+    // Highlight in 3D network and trigger update of styles
+    update3DGraphStyles();
     
-    // Highlight links
-    d3.selectAll('.link')
-      .classed('highlighted', l => l.source.id === nodeId || l.target.id === nodeId)
-      .style('stroke-opacity', l => (l.source.id === nodeId || l.target.id === nodeId) ? 0.9 : 0.08);
-      
     // Shift focus in network graph if active
-    if (state.activeTab === 'network-tab') {
-        const d3Node = d3.selectAll('.node').filter(n => n.id === nodeId).datum();
-        if (d3Node) {
-            // Zoom/pan to node
-            const transform = d3.zoomIdentity
-                .translate(window.innerWidth / 2 - 200 - d3Node.x, window.innerHeight / 2 - d3Node.y)
-                .scale(1.2);
-                
-            d3.select('#network-svg')
-              .transition()
-              .duration(750)
-              .call(d3.zoom().transform, transform);
+    if (state.activeTab === 'network-tab' && state.graph3D) {
+        // Find the node object in the 3D graph
+        const nodeObj = state.graph3D.graphData().nodes.find(n => n.id === nodeId);
+        if (nodeObj) {
+            // Aim camera at node
+            const distance = 80;
+            const distRatio = 1 + distance / Math.hypot(nodeObj.x, nodeObj.y, nodeObj.z);
+            
+            state.graph3D.cameraPosition(
+                { x: nodeObj.x * distRatio, y: nodeObj.y * distRatio, z: nodeObj.z * distRatio }, // new position
+                nodeObj, // lookAt center
+                1500  // transition ms
+            );
         }
     }
+}
+
+// Function to update the style properties of nodes/links based on current selections
+function update3DGraphStyles() {
+    if (!state.graph3D) return;
+    
+    // Trigger recalculation of styles in 3D graph
+    state.graph3D.nodeColor(state.graph3D.nodeColor());
+    state.graph3D.linkWidth(state.graph3D.linkWidth());
+    state.graph3D.linkColor(state.graph3D.linkColor());
+    state.graph3D.linkDirectionalParticles(state.graph3D.linkDirectionalParticles());
 }
 
 // Update Detail side-panel card
@@ -414,6 +432,9 @@ function updateInfoPanel(node) {
 // Reset all panels
 function resetVisualization() {
     state.selectedNode = null;
+    state.highlightNode = null;
+    state.highlightLinks.clear();
+    state.highlightCity = null;
     document.getElementById('search-input').value = '';
     
     // Hide details panel
@@ -439,17 +460,11 @@ function resetVisualization() {
         state.mapLines = [];
     }
     
-    // Reset D3 styling
-    d3.selectAll('.node').classed('selected', false);
-    d3.selectAll('.link')
-      .classed('highlighted', false)
-      .style('stroke-opacity', 0.35);
-      
-    // Center D3 network
-    d3.select('#network-svg')
-      .transition()
-      .duration(750)
-      .call(d3.zoom().transform, d3.zoomIdentity.translate(0, 0).scale(1.0));
+    // Reset 3D graph view & styles
+    if (state.graph3D) {
+        update3DGraphStyles();
+        state.graph3D.cameraPosition({ x: 0, y: 0, z: 250 }, { x: 0, y: 0, z: 0 }, 1500);
+    }
 }
 
 // Bind reset and sliders
@@ -557,54 +572,182 @@ function initNetworkGraph() {
     const width = container.clientWidth;
     const height = container.clientHeight;
     
-    // SVG Setup
-    state.svg = d3.select("#network-svg")
-        .attr("viewBox", [0, 0, width, height]);
-        
-    // Define SVG glow filters
-    const defs = state.svg.append("defs");
-    const createGlowFilter = (id, color) => {
-        const filter = defs.append("filter")
-            .attr("id", id)
-            .attr("x", "-30%")
-            .attr("y", "-30%")
-            .attr("width", "160%")
-            .attr("height", "160%");
-        
-        filter.append("feGaussianBlur")
-            .attr("stdDeviation", "4")
-            .attr("result", "blur");
+    // Initialize 3D Force Graph
+    state.graph3D = ForceGraph3D()(container)
+        .width(width)
+        .height(height)
+        .backgroundColor('#0b0f19')
+        .showNavInfo(false)
+        .cooldownTicks(100)
+        .nodeResolution(24)
+        .nodeColor(node => {
+            // Highlight color based on state
+            if (state.highlightCity) {
+                if (getNodeCity(node) === state.highlightCity) {
+                    if (node.type === 'publisher') return "#f43f5e";
+                    return node.is_jesuit ? "#fbbf24" : "#38bdf8";
+                }
+                return 'rgba(30, 41, 59, 0.15)'; // dimmed slate
+            }
             
-        const merge = filter.append("feMerge");
-        merge.append("feMergeNode").attr("in", "blur");
-        merge.append("feMergeNode").attr("in", "SourceGraphic");
-    };
-    createGlowFilter("glow-censor", "#38bdf8");
-    createGlowFilter("glow-publisher", "#f43f5e");
-    createGlowFilter("glow-jesuit", "#fbbf24");
-        
-    state.gContainer = state.svg.append("g");
-    
-    // Add Pan & Zoom support
-    state.svg.call(d3.zoom()
-        .extent([[0, 0], [width, height]])
-        .scaleExtent([0.15, 6])
-        .on("zoom", ({transform}) => {
-            state.gContainer.attr("transform", transform);
+            const activeHighlightNode = state.highlightNode || (state.selectedNode ? state.networkData.nodes.find(n => n.id === state.selectedNode) : null);
+            if (activeHighlightNode) {
+                if (node.id === activeHighlightNode.id) {
+                    if (node.type === 'publisher') return "#f43f5e";
+                    return node.is_jesuit ? "#fbbf24" : "#38bdf8";
+                }
+                
+                const isConnected = state.highlightLinks.size > 0 ? 
+                    Array.from(state.highlightLinks).some(l => {
+                        const sId = typeof l.source === 'object' ? l.source.id : l.source;
+                        const tId = typeof l.target === 'object' ? l.target.id : l.target;
+                        return sId === node.id || tId === node.id;
+                    }) :
+                    state.networkData.links.some(l => {
+                        if (l.weight < state.networkThreshold) return false;
+                        if (state.showJesuitsOnly) {
+                            const sNode = state.networkData.nodes.find(n => n.id === l.source);
+                            const tNode = state.networkData.nodes.find(n => n.id === l.target);
+                            if (!sNode || !tNode) return false;
+                            if (sNode.type === 'censor' && !sNode.is_jesuit) return false;
+                            if (tNode.type === 'censor' && !tNode.is_jesuit) return false;
+                        }
+                        const sId = typeof l.source === 'object' ? l.source.id : l.source;
+                        const tId = typeof l.target === 'object' ? l.target.id : l.target;
+                        return (sId === activeHighlightNode.id && tId === node.id) || (tId === activeHighlightNode.id && sId === node.id);
+                    });
+                
+                if (isConnected) {
+                    if (node.type === 'publisher') return "#f43f5e";
+                    return node.is_jesuit ? "#fbbf24" : "#38bdf8";
+                } else {
+                    return 'rgba(30, 41, 59, 0.15)'; // dimmed slate
+                }
+            }
+            
+            // Default node color
+            if (node.type === 'publisher') return "#f43f5e"; // Rose
+            return node.is_jesuit ? "#fbbf24" : "#38bdf8"; // Gold vs Sky Blue
         })
-    );
-    
+        .nodeVal(node => {
+            // Scale node size by degree
+            return Math.sqrt(node.degree) * 1.5 + 1.2;
+        })
+        .nodeLabel(node => {
+            const nodeCity = getNodeCity(node) || 'Unknown';
+            const nodeType = node.type === 'censor' ? (node.is_jesuit ? 'Jesuit Censor' : 'Censor') : 'Publisher/Printer';
+            return `
+                <div style="background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; color: #fff; font-family: 'Inter', sans-serif; box-shadow: 0 4px 20px rgba(0,0,0,0.45); pointer-events: none;">
+                    <div style="font-weight: 700; font-size:13px; color:#ffffff; margin-bottom:4px;">${node.id}</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-bottom:2px;"><strong style="color:#cbd5e1;">Type:</strong> ${nodeType}</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-bottom:2px;"><strong style="color:#cbd5e1;">City:</strong> ${nodeCity}</div>
+                    <div style="font-size:11px; color:#94a3b8;"><strong style="color:#cbd5e1;">Connections:</strong> ${node.degree} nodes</div>
+                </div>
+            `;
+        })
+        .linkWidth(link => {
+            // Make selected links thicker, rest thinner
+            const activeHighlightNode = state.highlightNode || (state.selectedNode ? state.networkData.nodes.find(n => n.id === state.selectedNode) : null);
+            if (state.highlightCity) {
+                const sCity = getNodeCity(link.source);
+                const tCity = getNodeCity(link.target);
+                const isConnected = (sCity === state.highlightCity || tCity === state.highlightCity);
+                return isConnected ? Math.min(2 + link.weight * 0.5, 6.0) : 0.4;
+            }
+            if (activeHighlightNode) {
+                const sId = typeof link.source === 'object' ? link.source.id : link.source;
+                const tId = typeof link.target === 'object' ? link.target.id : link.target;
+                const isConnected = (sId === activeHighlightNode.id || tId === activeHighlightNode.id);
+                return isConnected ? Math.min(2 + link.weight * 0.5, 6.0) : 0.4;
+            }
+            return Math.min(0.8 + link.weight * 0.3, 3.5);
+        })
+        .linkColor(link => {
+            // Dim unselected links
+            const activeHighlightNode = state.highlightNode || (state.selectedNode ? state.networkData.nodes.find(n => n.id === state.selectedNode) : null);
+            if (state.highlightCity) {
+                const sCity = getNodeCity(link.source);
+                const tCity = getNodeCity(link.target);
+                const isConnected = (sCity === state.highlightCity || tCity === state.highlightCity);
+                if (!isConnected) return 'rgba(51, 65, 85, 0.03)';
+            } else if (activeHighlightNode) {
+                const sId = typeof link.source === 'object' ? link.source.id : link.source;
+                const tId = typeof link.target === 'object' ? link.target.id : link.target;
+                const isConnected = (sId === activeHighlightNode.id || tId === activeHighlightNode.id);
+                if (!isConnected) return 'rgba(51, 65, 85, 0.03)';
+            }
+            
+            const sourceObj = typeof link.source === 'object' ? link.source : state.networkData.nodes.find(n => n.id === link.source);
+            if (sourceObj && sourceObj.type === 'censor') {
+                return sourceObj.is_jesuit ? 'rgba(251, 191, 36, 0.4)' : 'rgba(56, 189, 248, 0.4)';
+            }
+            return 'rgba(255, 255, 255, 0.18)';
+        })
+        .linkDirectionalParticles(link => {
+            // Show moving particles for book flow!
+            const activeHighlightNode = state.highlightNode || (state.selectedNode ? state.networkData.nodes.find(n => n.id === state.selectedNode) : null);
+            if (state.highlightCity) {
+                const sCity = getNodeCity(link.source);
+                const tCity = getNodeCity(link.target);
+                return (sCity === state.highlightCity || tCity === state.highlightCity) ? link.weight : 0;
+            }
+            if (activeHighlightNode) {
+                const sId = typeof link.source === 'object' ? link.source.id : link.source;
+                const tId = typeof link.target === 'object' ? link.target.id : link.target;
+                return (sId === activeHighlightNode.id || tId === activeHighlightNode.id) ? link.weight : 0;
+            }
+            return link.weight;
+        })
+        .linkDirectionalParticleSpeed(link => link.weight * 0.0025 + 0.0015)
+        .linkDirectionalParticleWidth(2.2)
+        .linkDirectionalParticleColor(link => {
+            const sourceObj = typeof link.source === 'object' ? link.source : state.networkData.nodes.find(n => n.id === link.source);
+            if (sourceObj && sourceObj.type === 'censor') {
+                return sourceObj.is_jesuit ? '#fbbf24' : '#38bdf8';
+            }
+            return '#f43f5e';
+        })
+        .onNodeClick(node => {
+            selectNode(node.id);
+        })
+        .onNodeHover(node => {
+            // Update node hover highlight states
+            state.highlightLinks.clear();
+            state.highlightNode = node || null;
+            
+            if (node) {
+                state.networkData.links.forEach(l => {
+                    const sId = typeof l.source === 'object' ? l.source.id : l.source;
+                    const tId = typeof l.target === 'object' ? l.target.id : l.target;
+                    if (sId === node.id || tId === node.id) {
+                        state.highlightLinks.add(l);
+                    }
+                });
+            }
+            
+            update3DGraphStyles();
+        });
+        
+    // Listen for window resize
+    window.addEventListener('resize', () => {
+        if (state.graph3D) {
+            const c = document.getElementById('network-container');
+            state.graph3D.width(c.clientWidth);
+            state.graph3D.height(c.clientHeight);
+        }
+    });
+
     updateNetworkGraph();
 }
 
 function updateNetworkGraph() {
-    if (!state.networkData) return;
+    if (!state.networkData || !state.graph3D) return;
     
     // 1. Filter Links based on threshold
     let links = state.networkData.links.map(l => ({...l}))
         .filter(l => l.weight >= state.networkThreshold);
         
-    // 2. Filter Nodes based on Jesuit filter and degree
+    // 2. Filter Nodes based on Jesuit filter and active links
     let activeNodes = new Set();
     links.forEach(l => {
         activeNodes.add(l.source);
@@ -615,165 +758,13 @@ function updateNetworkGraph() {
         .filter(n => activeNodes.has(n.id));
         
     if (state.showJesuitsOnly) {
-        // Keep publishers OR Jesuit censors
         nodes = nodes.filter(n => n.type === 'publisher' || n.is_jesuit);
-        // Clean orphaned links
         const nodeSet = new Set(nodes.map(n => n.id));
         links = links.filter(l => nodeSet.has(l.source) && nodeSet.has(l.target));
     }
     
-    // Clear old elements
-    state.gContainer.selectAll("*").remove();
-    
-    // Draw links
-    const link = state.gContainer.append("g")
-        .selectAll("line")
-        .data(links)
-        .join("line")
-        .attr("class", "link")
-        .attr("stroke-width", d => Math.min(1 + d.weight * 0.4, 6.0));
-        
-    // Draw nodes
-    const node = state.gContainer.append("g")
-        .selectAll("path")
-        .data(nodes)
-        .join("path")
-        .attr("class", d => {
-            let baseClass = "node";
-            if (d.type === 'publisher') return baseClass + " pub-glow";
-            return d.is_jesuit ? baseClass + " jes-glow" : baseClass + " cns-glow";
-        })
-        .attr("d", d => {
-            const r = d.type === 'publisher' ? 6 + Math.min(d.degree * 0.4, 16) : 
-                      (d.is_jesuit ? 7 + Math.min(d.degree * 0.5, 14) : 4 + Math.min(d.degree * 0.3, 10));
-            if (d.type === 'publisher') {
-                // Circle path centered at 0,0
-                return `M 0,0 m -${r},0 a ${r},${r} 0 1,0 ${r*2},0 a ${r},${r} 0 1,0 -${r*2},0`;
-            } else {
-                // Hexagon path centered at 0,0
-                const h = r * Math.sqrt(3) / 2;
-                return `M ${r},0 L ${r/2},${h} L ${-r/2},${h} L ${-r},0 L ${-r/2},${-h} L ${r/2},${-h} Z`;
-            }
-        })
-        .attr("fill", d => {
-            if (d.type === 'publisher') return "#f43f5e"; // Rose
-            return d.is_jesuit ? "#fbbf24" : "#38bdf8"; // Gold vs Sky Blue
-        })
-        .attr("stroke", d => d.is_jesuit ? "#ffffff" : "none")
-        .attr("stroke-width", d => d.is_jesuit ? 1.5 : 0)
-        .call(drag(state.simulation))
-        .on("click", (e, d) => {
-            selectNode(d.id);
-            e.stopPropagation();
-        });
-        
-    // Interactive hover triggers (HTML Tooltips & Link Flow Animations)
-    node.on("mouseover", (e, d) => {
-        // 1. Show dynamic floating tooltip card
-        const tooltip = d3.select("#network-tooltip");
-        tooltip.html(`
-            <div style="font-weight: 700; font-size:12px; color:#ffffff; margin-bottom:4px;">${d.id}</div>
-            <div style="color:#94a3b8; margin-bottom:2px;"><strong style="color:#cbd5e1;">Type:</strong> ${d.type === 'censor' ? (d.is_jesuit ? 'Jesuit Censor' : 'Censor') : 'Publisher/Printer'}</div>
-            <div style="color:#94a3b8; margin-bottom:2px;"><strong style="color:#cbd5e1;">City:</strong> ${getNodeCity(d) || 'Unknown'}</div>
-            <div style="color:#94a3b8;"><strong style="color:#cbd5e1;">Connections:</strong> ${d.degree} nodes</div>
-        `)
-        .classed("hidden", false);
-        
-        // 2. Highlight active connections and trigger flow animation in the node's color
-        const highlightColor = d.type === 'censor' ? (d.is_jesuit ? '#fbbf24' : '#38bdf8') : '#f43f5e';
-        
-        link.classed("highlighted", l => l.source.id === d.id || l.target.id === d.id)
-            .style("stroke", l => (l.source.id === d.id || l.target.id === d.id) ? highlightColor : '#334155')
-            .style("stroke-opacity", l => (l.source.id === d.id || l.target.id === d.id) ? 0.95 : 0.05);
-    })
-    .on("mousemove", (e) => {
-        // Follow cursor position
-        d3.select("#network-tooltip")
-            .style("left", (e.pageX + 15) + "px")
-            .style("top", (e.pageY - 15) + "px");
-    })
-    .on("mouseout", () => {
-        // Hide tooltip
-        d3.select("#network-tooltip").classed("hidden", true);
-        
-        // Reset links to selected highlight or default
-        if (state.selectedNode) {
-            const selectedNodeObj = state.networkData.nodes.find(n => n.id === state.selectedNode);
-            const highlightColor = selectedNodeObj ? (selectedNodeObj.type === 'censor' ? (selectedNodeObj.is_jesuit ? '#fbbf24' : '#38bdf8') : '#f43f5e') : '#38bdf8';
-            
-            link.classed("highlighted", l => l.source.id === state.selectedNode || l.target.id === state.selectedNode)
-                .style("stroke", l => (l.source.id === state.selectedNode || l.target.id === state.selectedNode) ? highlightColor : '#334155')
-                .style("stroke-opacity", l => (l.source.id === state.selectedNode || l.target.id === state.selectedNode) ? 0.95 : 0.05);
-        } else {
-            link.classed("highlighted", false)
-                .style("stroke", '#334155')
-                .style("stroke-opacity", 0.35);
-        }
-    });
-
-    // Add labels for major hubs
-    const labelThreshold = 8;
-    const labelNodes = nodes.filter(n => n.degree >= labelThreshold);
-    
-    const labels = state.gContainer.append("g")
-        .selectAll("text")
-        .data(labelNodes)
-        .join("text")
-        .attr("class", "node-label")
-        .attr("dx", 10)
-        .attr("dy", 3)
-        .text(d => d.id);
-        
-    // D3 Force Simulation Setup
-    const container = document.getElementById('network-container');
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    
-    state.simulation = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink(links).id(d => d.id).distance(60))
-        .force("charge", d3.forceManyBody().strength(-120))
-        .force("center", d3.forceCenter(width / 2, height / 2))
-        .force("collision", d3.forceCollide().radius(d => 12 + Math.min(d.degree * 0.4, 16)));
-        
-    state.simulation.on("tick", () => {
-        link
-            .attr("x1", d => d.source.x)
-            .attr("y1", d => d.source.y)
-            .attr("x2", d => d.target.x)
-            .attr("y2", d => d.target.y);
-
-        node
-            .attr("transform", d => `translate(${d.x}, ${d.y})`);
-            
-        labels
-            .attr("x", d => d.x)
-            .attr("y", d => d.y);
-    });
-}
-
-// Drag & Drop handlers
-function drag(simulation) {
-    function dragstarted(event) {
-        if (!event.active) state.simulation.alphaTarget(0.3).restart();
-        event.subject.fx = event.subject.x;
-        event.subject.fy = event.subject.y;
-    }
-    
-    function dragged(event) {
-        event.subject.fx = event.x;
-        event.subject.fy = event.y;
-    }
-    
-    function dragended(event) {
-        if (!event.active) state.simulation.alphaTarget(0);
-        event.subject.fx = null;
-        event.subject.fy = null;
-    }
-    
-    return d3.drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended);
+    // Feed data to 3D graph (it restarts the force simulation automatically)
+    state.graph3D.graphData({ nodes, links });
 }
 
 // ==========================================================================
@@ -1241,21 +1232,17 @@ function updateMapMarkers() {
                 document.getElementById('search-input').value = '';
                 state.searchQuery = '';
                 
-                // 3. Highlight D3 nodes matching this city
-                d3.selectAll('.node').classed('selected', n => getNodeCity(n) === city);
+                // 3. Highlight 3D nodes matching this city
+                state.selectedNode = null;
+                state.highlightNode = null;
+                state.highlightLinks.clear();
+                state.highlightCity = city;
                 
-                // 4. Highlight lines connected to those nodes
-                d3.selectAll('.link')
-                  .classed('highlighted', l => {
-                      const sCity = getNodeCity(l.source);
-                      const tCity = getNodeCity(l.target);
-                      return sCity === city || tCity === city;
-                  })
-                  .style('stroke-opacity', l => {
-                      const sCity = getNodeCity(l.source);
-                      const tCity = getNodeCity(l.target);
-                      return (sCity === city || tCity === city) ? 0.9 : 0.05;
-                  });
+                update3DGraphStyles();
+                
+                if (state.graph3D) {
+                    state.graph3D.cameraPosition({ x: 0, y: 0, z: 250 }, { x: 0, y: 0, z: 0 }, 1200);
+                }
             });
         });
         
