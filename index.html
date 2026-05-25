@@ -26,8 +26,11 @@
         <!-- Sidebar / Filter Controls & Info panel -->
         <aside class="sidebar">
             <div class="brand">
-                <h1>Vetting the HRE</h1>
-                <span class="subtitle">300 Years of Book Censorship (1500–1800)</span>
+                <img src="assets/branding/branding_logo.jpg" alt="Vetting the HRE Logo" class="brand-logo">
+                <div>
+                    <h1>Vetting the HRE</h1>
+                    <span class="subtitle">300 Years of Book Censorship (1500–1800)</span>
+                </div>
             </div>
             
             <!-- Controls Box -->
@@ -72,6 +75,9 @@
                     <p>Click on any node in the network or a city on the map to inspect its details and metrics.</p>
                 </div>
                 <div class="info-content hidden" id="info-content">
+                    <div class="info-section hidden" id="section-city-image" style="margin-bottom: 12px;">
+                        <img id="sidebar-city-image" class="sidebar-city-image" src="" alt="City view">
+                    </div>
                     <h3 id="info-name">Actor Name</h3>
                     <div class="tag-row">
                         <span id="info-tag-type" class="badge badge-type">Censor</span>
@@ -91,6 +97,13 @@
                     <div class="info-section" id="section-biography">
                         <h4>Biographical Notes</h4>
                         <p id="info-biography">Born 1572 in Munich, taught at Ingolstadt, died 1632.</p>
+                    </div>
+                    
+                    <div class="info-section hidden" id="section-city-timeline">
+                        <h4>300-Year Output Trend</h4>
+                        <div class="city-chart-wrapper">
+                            <canvas id="city-timeline-chart"></canvas>
+                        </div>
                     </div>
                     
                     <div class="info-section" id="section-stats">

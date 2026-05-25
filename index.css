@@ -68,7 +68,19 @@ body {
    SIDEBAR COMPONENTS
    ========================================================================== */
 .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     margin-bottom: 8px;
+}
+
+.brand-logo {
+    width: 42px;
+    height: 42px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
 }
 
 .brand h1 {
@@ -832,12 +844,14 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 .spinner {
-    width: 36px;
-    height: 36px;
-    border: 3px solid rgba(56, 189, 248, 0.15);
-    border-top: 3px solid #38bdf8;
+    width: 48px;
+    height: 48px;
+    background-image: url('assets/UI/loading_spinner.jpg');
+    background-size: cover;
     border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+    animation: spin 1.2s linear infinite;
+    filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.6)) grayscale(0.5);
+    border: 1px solid rgba(56, 189, 248, 0.3);
 }
 
 @keyframes spin {
@@ -883,4 +897,92 @@ input[type="range"]::-webkit-slider-thumb:hover {
 .prev-marker-glow-decline {
     filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.7));
 }
+
+/* Sidebar city timeline chart styling */
+.city-chart-wrapper {
+    position: relative;
+    height: 130px;
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    background-color: rgba(15, 23, 42, 0.4);
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 8px;
+}
+
+/* Custom Leaflet divIcon Map Marker (Circular Images) */
+.custom-map-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+.custom-map-marker-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: visible;
+}
+
+.marker-image-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 1.5px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+    overflow: hidden; /* crop image to circle */
+    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.2s ease, border-color 0.2s ease;
+}
+
+/* Connect the neon glows to the custom wrapper */
+.glow-growth .marker-image-wrapper {
+    filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.85));
+    border-color: #10b981;
+}
+
+.glow-decline .marker-image-wrapper {
+    filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.85));
+    border-color: #ef4444;
+}
+
+.glow-neutral .marker-image-wrapper {
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.45));
+    border-color: #ffffff;
+}
+
+/* Hover effects for custom markers */
+.custom-map-marker-wrapper:hover .marker-image-wrapper {
+    transform: scale(1.22);
+}
+.glow-growth:hover .marker-image-wrapper {
+    filter: drop-shadow(0 0 8px rgba(16, 185, 129, 1.0));
+    border-width: 2px;
+}
+.glow-decline:hover .marker-image-wrapper {
+    filter: drop-shadow(0 0 8px rgba(239, 68, 68, 1.0));
+    border-width: 2px;
+}
+.glow-neutral:hover .marker-image-wrapper {
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
+    border-width: 1.5px;
+}
+
+/* Dynamic Sidebar City woodcut visual blending */
+.sidebar-city-image {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    filter: grayscale(1) contrast(1.1) brightness(0.85);
+    mix-blend-mode: screen;
+    opacity: 0.9;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+
 

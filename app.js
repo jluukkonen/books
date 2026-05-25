@@ -29,8 +29,11 @@ const state = {
     charts: {
         leipzigFrankfurt: null,
         confessional: null,
-        language: null
-    }
+        language: null,
+        cityTimeline: null
+    },
+    selectedCity: null,
+    selectedCityConfession: null
 };
 
 // Coordinate database cities with lat/long for leaflet
@@ -345,6 +348,18 @@ function updateInfoPanel(node) {
     // Hide map actions since we are looking at an actor node
     document.getElementById('section-map-actions').classList.add('hidden');
     
+    // Hide city timeline and cover image and clean them up
+    const cityTimelineSection = document.getElementById('section-city-timeline');
+    if (cityTimelineSection) cityTimelineSection.classList.add('hidden');
+    const cityImgSection = document.getElementById('section-city-image');
+    if (cityImgSection) cityImgSection.classList.add('hidden');
+    state.selectedCity = null;
+    state.selectedCityConfession = null;
+    if (state.charts.cityTimeline) {
+        state.charts.cityTimeline.destroy();
+        state.charts.cityTimeline = null;
+    }
+    
     document.getElementById('info-name').innerText = node.id;
     
     // Type Tag
@@ -405,6 +420,18 @@ function resetVisualization() {
     document.getElementById('info-placeholder').classList.remove('hidden');
     document.getElementById('info-content').classList.add('hidden');
     document.getElementById('section-map-actions').classList.add('hidden');
+    
+    // Hide and clear city timeline chart and cover image
+    const cityTimelineSection = document.getElementById('section-city-timeline');
+    if (cityTimelineSection) cityTimelineSection.classList.add('hidden');
+    const cityImgSection = document.getElementById('section-city-image');
+    if (cityImgSection) cityImgSection.classList.add('hidden');
+    state.selectedCity = null;
+    state.selectedCityConfession = null;
+    if (state.charts.cityTimeline) {
+        state.charts.cityTimeline.destroy();
+        state.charts.cityTimeline = null;
+    }
     
     // Clear geographic flow lines
     if (state.mapLines && state.map) {
@@ -709,8 +736,147 @@ function initMap() {
     updateMapMarkers();
 }
 
+// Get color hex code for a city confession
+function getConfessionColor(confession) {
+    if (confession === "Catholic") return "#d4af37"; // Gold
+    if (confession === "Protestant") return "#5b21b6"; // Deep Purple
+    return "#94a3b8"; // Mixed / Gray
+}
+
+// Aggregate city printing count decade-over-decade from 1500 to 1790
+function getCityDecadeCounts(city) {
+    const decades = [];
+    for (let d = 1500; d <= 1790; d += 10) {
+        decades.push(d);
+    }
+    const counts = Array(decades.length).fill(0);
+    
+    if (state.timelineData) {
+        state.timelineData.forEach(row => {
+            const yr = parseInt(row["year"]);
+            if (yr >= 1500 && yr < 1800 && row["city"] === city) {
+                const decadeIndex = Math.floor((yr - 1500) / 10);
+                counts[decadeIndex] += parseInt(row["count"]) || 0;
+            }
+        });
+    }
+    return { decades, counts };
+}
+
+// Render/Update the sidebar line chart for a selected city
+function updateCityTimelineChart(city, activeDecade, confession) {
+    const confessionColor = getConfessionColor(confession);
+    const { decades, counts } = getCityDecadeCounts(city);
+    const activeIndex = decades.indexOf(activeDecade);
+    
+    // Clear and reveal the container
+    const section = document.getElementById('section-city-timeline');
+    if (section) section.classList.remove('hidden');
+    
+    const canvas = document.getElementById('city-timeline-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    // If a chart already exists, destroy it to avoid visual bugs
+    if (state.charts.cityTimeline) {
+        state.charts.cityTimeline.destroy();
+    }
+    
+    // Build dynamic point styles
+    const pointRadii = counts.map((_, idx) => idx === activeIndex ? 6 : 0);
+    const pointBgColors = counts.map((_, idx) => idx === activeIndex ? '#ffffff' : confessionColor);
+    const pointBorderColors = counts.map((_, idx) => idx === activeIndex ? confessionColor : 'transparent');
+    const pointBorderWidths = counts.map((_, idx) => idx === activeIndex ? 3 : 0);
+    
+    // Convert color hex to rgba for the line fill area
+    const fillRgba = confession === "Catholic" ? 'rgba(212, 175, 55, 0.15)' : 
+                     (confession === "Protestant" ? 'rgba(91, 33, 182, 0.15)' : 'rgba(148, 163, 184, 0.15)');
+    
+    state.charts.cityTimeline = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: decades.map(d => `${d}s`),
+            datasets: [{
+                label: 'Publications',
+                data: counts,
+                borderColor: confessionColor,
+                backgroundColor: fillRgba,
+                borderWidth: 2.5,
+                fill: true,
+                tension: 0.25,
+                pointRadius: pointRadii,
+                pointHoverRadius: pointRadii.map(r => r > 0 ? 8 : 4),
+                pointBackgroundColor: pointBgColors,
+                pointBorderColor: pointBorderColors,
+                pointBorderWidth: pointBorderWidths
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.parsed.y} titles`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        color: '#64748b',
+                        font: { family: 'Inter', size: 9 },
+                        maxRotation: 0,
+                        autoSkip: true,
+                        maxTicksLimit: 5
+                    }
+                },
+                y: {
+                    grid: { color: '#1e293b' },
+                    ticks: {
+                        color: '#64748b',
+                        font: { family: 'Inter', size: 9 },
+                        maxTicksLimit: 3
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Synchronize chart highlight indicator on timeline dragging
+function updateCityChartHighlight(activeDecade) {
+    if (!state.charts.cityTimeline || !state.selectedCity) return;
+    
+    const chart = state.charts.cityTimeline;
+    const decades = [];
+    for (let d = 1500; d <= 1790; d += 10) {
+        decades.push(d);
+    }
+    const activeIndex = decades.indexOf(activeDecade);
+    const confessionColor = getConfessionColor(state.selectedCityConfession);
+    
+    const dataset = chart.data.datasets[0];
+    dataset.pointRadius = dataset.data.map((_, idx) => idx === activeIndex ? 6 : 0);
+    dataset.pointHoverRadius = dataset.data.map((_, idx) => idx === activeIndex ? 8 : 4);
+    dataset.pointBackgroundColor = dataset.data.map((_, idx) => idx === activeIndex ? '#ffffff' : confessionColor);
+    dataset.pointBorderColor = dataset.data.map((_, idx) => idx === activeIndex ? confessionColor : 'transparent');
+    dataset.pointBorderWidth = dataset.data.map((_, idx) => idx === activeIndex ? 3 : 0);
+    
+    chart.update('none'); // Instantaneous update without animation
+}
+
 function updateMapMarkers() {
     if (!state.timelineData || !state.map) return;
+    
+    const targetDecade = state.activeYear;
+    
+    // Synchronize active selection timeline chart highlight if visible
+    updateCityChartHighlight(targetDecade);
     
     // Clear old markers and lines
     state.mapMarkers.forEach(m => state.map.removeLayer(m));
@@ -720,7 +886,6 @@ function updateMapMarkers() {
         state.mapLines = [];
     }
     
-    const targetDecade = state.activeYear;
     const previousDecade = targetDecade - 10;
     
     // Confessional filters state
@@ -838,30 +1003,28 @@ function updateMapMarkers() {
         if (data.confession === "Catholic") color = "#d4af37"; // Gold
         else if (data.confession === "Protestant") color = "#5b21b6"; // Deep Purple
         
-        // Create the active main city marker
-        const marker = L.circleMarker(coords, {
-            radius: radius,
-            fillColor: color,
-            color: borderStrokeColor,
-            weight: strokeWeight,
-            opacity: 0.9,
-            fillOpacity: 0.75,
-            className: markerClasses.join(' ')
-        }).addTo(state.map);
+        // Create custom Leaflet divIcon using the Asset Agent's marker images
+        let markerImg = "assets/markers/mixed_marker.jpg";
+        if (data.confession === "Catholic") markerImg = "assets/markers/catholic_marker.jpg";
+        else if (data.confession === "Protestant") markerImg = "assets/markers/protestant_marker.jpg";
         
-        // Interactive mouseover hover highlight style
-        marker.on('mouseover', function () {
-            this.setStyle({
-                weight: strokeWeight + 1.5,
-                fillOpacity: 0.95
-            });
+        const iconSize = radius * 2.2;
+        
+        const divIcon = L.divIcon({
+            html: `<div class="custom-map-marker-wrapper ${markerClasses.join(' ')}" style="width:${iconSize}px; height:${iconSize}px;">
+                     <div class="marker-image-wrapper" style="width:100%; height:100%;">
+                         <img src="${markerImg}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                     </div>
+                   </div>`,
+            className: 'custom-map-marker',
+            iconSize: [iconSize, iconSize],
+            iconAnchor: [iconSize / 2, iconSize / 2]
         });
-        marker.on('mouseout', function () {
-            this.setStyle({
-                weight: strokeWeight,
-                fillOpacity: 0.75
-            });
-        });
+        
+        // Create the active main city marker
+        const marker = L.marker(coords, {
+            icon: divIcon
+        }).addTo(state.map);
         
         // Rich tooltip detail
         marker.bindTooltip(`
@@ -874,6 +1037,29 @@ function updateMapMarkers() {
         
         // Sidebar metadata bind on click
         marker.on('click', () => {
+            state.selectedCity = city;
+            state.selectedCityConfession = data.confession;
+            updateCityTimelineChart(city, targetDecade, data.confession);
+            
+            // Dynamically show city woodcut image in sidebar if it exists
+            const cityAssetMap = {
+                "Leipzig": "leipzig",
+                "Frankfurt am Main": "frankfurt",
+                "Köln": "cologne",
+                "München": "munich",
+                "Wien": "vienna"
+            };
+            const assetName = cityAssetMap[city];
+            const cityImgSection = document.getElementById('section-city-image');
+            const cityImg = document.getElementById('sidebar-city-image');
+            
+            if (assetName && cityImg && cityImgSection) {
+                cityImg.src = `assets/hubs/city_${assetName}.jpg`;
+                cityImgSection.classList.remove('hidden');
+            } else if (cityImgSection) {
+                cityImgSection.classList.add('hidden');
+            }
+            
             const sidePanel = document.getElementById('info-content');
             const placeholder = document.getElementById('info-placeholder');
             
@@ -1012,6 +1198,31 @@ function updateMapMarkers() {
         });
         
         state.mapMarkers.push(marker);
+    }
+
+    // If a city is currently selected, dynamically update its sidebar text for the new active decade
+    if (state.selectedCity) {
+        const city = state.selectedCity;
+        const data = cityTotals[city] || { count: 0, confession: state.selectedCityConfession };
+        const prevData = prevCityTotals[city];
+        
+        const bioText = document.getElementById('info-biography');
+        if (bioText) {
+            let comparisonText = "";
+            if (prevData && prevData.count > 0) {
+                const diff = data.count - prevData.count;
+                const percent = prevData.count > 0 ? ((diff / prevData.count) * 100).toFixed(1) : "0.0";
+                const verb = diff >= 0 ? "increased" : "decreased";
+                const changeColor = diff >= 0 ? "#10b981" : "#ef4444";
+                const sign = diff >= 0 ? "+" : "";
+                comparisonText = ` This represents a <strong style="color: ${changeColor};">${sign}${percent}%</strong> output change (${verb} by ${Math.abs(diff)} titles) compared to the previous decade (${previousDecade}s: ${prevData.count} titles).`;
+            }
+            
+            bioText.innerHTML = `
+                Historically classified as a <strong>${data.confession}</strong> printing hub.<br/><br/>
+                During the <strong>${targetDecade}s</strong>, publishers in ${city} released a total of <strong>${data.count}</strong> cataloged titles in our database.${comparisonText}
+            `;
+        }
     }
 }
 
