@@ -857,6 +857,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 .flow-polyline {
+    stroke-dashoffset: 0;
     animation: flow-dash 2s linear infinite;
     filter: drop-shadow(0 0 3px rgba(0,0,0,0.5));
 }

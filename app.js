@@ -815,6 +815,68 @@ function updateMapMarkers() {
             
             document.getElementById('info-name').innerText = city;
             
+            // Draw geographic flow lines for this city
+            if (state.mapLines) {
+                state.mapLines.forEach(l => state.map.removeLayer(l));
+            }
+            state.mapLines = [];
+            
+            if (state.networkData) {
+                // Find all nodes (actors) associated with this city
+                const cityNodes = state.networkData.nodes.filter(n => getNodeCity(n) === city);
+                const cityNodeIds = new Set(cityNodes.map(n => n.id));
+                const drawnDestinations = new Set();
+                
+                // Find all links connected to any actor in this city
+                const connectedLinks = state.networkData.links.filter(l => {
+                    const sId = typeof l.source === 'object' ? l.source.id : l.source;
+                    const tId = typeof l.target === 'object' ? l.target.id : l.target;
+                    return cityNodeIds.has(sId) || cityNodeIds.has(tId);
+                });
+                
+                connectedLinks.forEach(link => {
+                    const sId = typeof link.source === 'object' ? link.source.id : link.source;
+                    const tId = typeof link.target === 'object' ? link.target.id : link.target;
+                    
+                    const isSourceInCity = cityNodeIds.has(sId);
+                    const otherNodeId = isSourceInCity ? tId : sId;
+                    const otherNode = state.networkData.nodes.find(n => n.id === otherNodeId);
+                    
+                    if (otherNode) {
+                        const destCity = getNodeCity(otherNode);
+                        if (destCity && cityCoordinates[destCity] && destCity !== city) {
+                            if (drawnDestinations.has(destCity)) return; // Avoid duplicate lines
+                            drawnDestinations.add(destCity);
+                            
+                            const destCoords = cityCoordinates[destCity];
+                            
+                            // Set style based on city confession
+                            const lineColor = data.confession === "Catholic" ? '#38bdf8' : 
+                                              (data.confession === "Protestant" ? '#5b21b6' : '#cbd5e1');
+                            
+                            // Draw flow polyline
+                            const polyline = L.polyline([coords, destCoords], {
+                                color: lineColor,
+                                weight: 3.5,
+                                opacity: 0.75,
+                                dashArray: '8, 12',
+                                className: 'flow-polyline'
+                            }).addTo(state.map);
+                            
+                            // Tooltip showing connection
+                            polyline.bindTooltip(`
+                                <div style="font-family: inherit; font-size:11px;">
+                                    <strong>Geographic Channel:</strong><br/>
+                                    ${city} &harr; ${destCity}
+                                </div>
+                            `, { sticky: true });
+                            
+                            state.mapLines.push(polyline);
+                        }
+                    }
+                });
+            }
+            
             const typeTag = document.getElementById('info-tag-type');
             typeTag.innerText = 'Printing Center';
             typeTag.style.backgroundColor = color;
