@@ -590,31 +590,123 @@ input[type="range"]::-webkit-slider-thumb:hover {
     background-color: rgba(30, 41, 59, 0.95);
     border: 1px solid #334155;
     border-radius: 12px;
-    padding: 16px 20px;
+    padding: 14px 20px;
     z-index: 1000;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 30px;
+    gap: 24px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
 }
 
 .map-controls .slider-container {
+    flex-grow: 2;
+}
+
+.slider-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.slider-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.map-play-btn {
+    background-color: #38bdf8;
+    color: #0f172a;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.15s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    height: 24px;
+}
+
+.map-play-btn:hover {
+    background-color: #0ea5e9;
+    transform: translateY(-1px);
+}
+
+.map-play-btn:active {
+    transform: translateY(0);
+}
+
+.map-play-btn.playing {
+    background-color: #f43f5e;
+    color: #ffffff;
+}
+
+.map-volume-container {
     flex-grow: 1;
+    min-width: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .slider-ticks {
     display: flex;
     justify-content: space-between;
     margin-top: 4px;
-    font-size: 10px;
+    font-size: 9px;
     color: #64748b;
 }
 
 .map-legend {
     display: flex;
-    gap: 16px;
+    flex-direction: column;
+    gap: 8px;
     flex-shrink: 0;
+    border-left: 1px solid #334155;
+    padding-left: 16px;
+}
+
+.legend-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.legend-filters {
+    display: flex;
+    gap: 12px;
+}
+
+.filter-label {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #94a3b8;
+    transition: color 0.15s ease;
+}
+
+.filter-label:hover {
+    color: #cbd5e1;
+}
+
+.filter-label input[type="checkbox"] {
+    accent-color: #38bdf8;
+    width: 13px;
+    height: 13px;
+    cursor: pointer;
 }
 
 .color-catholic-hub {
@@ -627,6 +719,27 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 .color-mixed-hub {
     background-color: #94a3b8;
+}
+
+/* Pulsing markers animation for large hubs */
+@keyframes marker-pulse {
+    0% {
+        stroke-width: 1px;
+        stroke-opacity: 0.7;
+    }
+    50% {
+        stroke-width: 3.5px;
+        stroke-opacity: 1;
+        stroke: #ffffff;
+    }
+    100% {
+        stroke-width: 1px;
+        stroke-opacity: 0.7;
+    }
+}
+
+.pulse-marker {
+    animation: marker-pulse 2s infinite ease-in-out;
 }
 
 /* Custom leaflet tooltip styling */

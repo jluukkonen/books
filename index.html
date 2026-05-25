@@ -97,6 +97,11 @@
                         <h4>Degree Centrality</h4>
                         <p>This actor is connected to <strong id="info-degree">12</strong> other nodes in the active graph.</p>
                     </div>
+                    
+                    <div class="info-section hidden" id="section-map-actions">
+                        <h4>Map Actions</h4>
+                        <button id="btn-highlight-city-actors" class="btn btn-secondary">Highlight City Actors in Network</button>
+                    </div>
                 </div>
             </div>
         </aside>
@@ -132,9 +137,16 @@
                 <!-- TAB 2: GEOGRAPHIC MAP -->
                 <div class="tab-content" id="map-tab">
                     <div class="map-controls">
+                        <!-- Play Button & Decade Slider -->
                         <div class="slider-container">
                             <div class="slider-header">
-                                <span>Timeline Slider (1500–1800)</span>
+                                <div class="slider-header-left">
+                                    <button id="map-play-btn" class="map-play-btn">
+                                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="currentColor" id="play-icon" style="margin-right: 4px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                        <span>Play</span>
+                                    </button>
+                                    <span class="slider-title">Timeline Slider (1500–1800)</span>
+                                </div>
                                 <span id="map-year-label" class="badge">Decade: 1610s</span>
                             </div>
                             <input type="range" id="map-year-slider" min="1500" max="1790" value="1610" step="10">
@@ -148,10 +160,33 @@
                                 <span>1800</span>
                             </div>
                         </div>
+                        
+                        <!-- Output Volume Threshold -->
+                        <div class="map-volume-container">
+                            <div class="slider-header">
+                                <span class="slider-title">Min Volume</span>
+                                <span id="map-volume-label" class="badge">1 title</span>
+                            </div>
+                            <input type="range" id="map-volume-slider" min="1" max="100" value="1" step="1">
+                        </div>
+                        
+                        <!-- Confessional Filters -->
                         <div class="map-legend">
-                            <span class="legend-item"><span class="legend-dot color-catholic-hub"></span>Catholic printing hubs</span>
-                            <span class="legend-item"><span class="legend-dot color-protestant-hub"></span>Protestant printing hubs</span>
-                            <span class="legend-item"><span class="legend-dot color-mixed-hub"></span>Mixed printing hubs</span>
+                            <span class="legend-title">Confession Filters</span>
+                            <div class="legend-filters">
+                                <label class="filter-label">
+                                    <input type="checkbox" id="filter-catholic" checked>
+                                    <span class="legend-dot color-catholic-hub"></span>Catholic
+                                </label>
+                                <label class="filter-label">
+                                    <input type="checkbox" id="filter-protestant" checked>
+                                    <span class="legend-dot color-protestant-hub"></span>Protestant
+                                </label>
+                                <label class="filter-label">
+                                    <input type="checkbox" id="filter-mixed" checked>
+                                    <span class="legend-dot color-mixed-hub"></span>Mixed
+                                </label>
+                            </div>
                         </div>
                     </div>
                     <div id="map-container" class="viz-container"></div>

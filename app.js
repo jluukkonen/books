@@ -8,6 +8,8 @@ const state = {
     selectedNode: null,
     activeYear: 1610,
     searchQuery: '',
+    isPlaying: false,
+    playInterval: null,
     
     // Raw Datasets
     networkData: null,
@@ -81,6 +83,29 @@ const cityCoordinates = {
     "Prague": [50.0755, 14.4378],
     "Danzig": [54.3520, 18.6466]
 };
+
+// Heuristic to match a network node to a geographic city
+function getNodeCity(node) {
+    if (!node) return null;
+    let searchString = '';
+    if (typeof node === 'string') {
+        searchString = node.toLowerCase();
+    } else {
+        searchString = ((node.id || '') + ' ' + (node.biography || '') + ' ' + (node.occupations || '')).toLowerCase();
+    }
+    for (const city of Object.keys(cityCoordinates)) {
+        if (searchString.includes(city.toLowerCase())) {
+            return city;
+        }
+    }
+    // Confessional / alternative spelling mappings
+    if (searchString.includes('köln') || searchString.includes('cologne')) return 'Köln';
+    if (searchString.includes('münchen') || searchString.includes('munich')) return 'München';
+    if (searchString.includes('nürnberg') || searchString.includes('nuremberg')) return 'Nürnberg';
+    if (searchString.includes('wien') || searchString.includes('vienna')) return 'Wien';
+    if (searchString.includes('straßburg') || searchString.includes('strasbourg')) return 'Strasbourg';
+    return null;
+}
 
 // ==========================================================================
 // STARTUP AND INITIALIZATION
@@ -221,6 +246,12 @@ function selectNode(nodeId) {
     state.selectedNode = nodeId;
     updateInfoPanel(node);
     
+    // Pan map to associated city if it exists
+    const associatedCity = getNodeCity(node);
+    if (associatedCity && cityCoordinates[associatedCity] && state.map) {
+        state.map.setView(cityCoordinates[associatedCity], 7);
+    }
+    
     // Highlight in D3 svg
     d3.selectAll('.node').classed('selected', n => n.id === nodeId);
     
@@ -253,6 +284,9 @@ function updateInfoPanel(node) {
     
     placeholder.classList.add('hidden');
     content.classList.remove('hidden');
+    
+    // Hide map actions since we are looking at an actor node
+    document.getElementById('section-map-actions').classList.add('hidden');
     
     document.getElementById('info-name').innerText = node.id;
     
@@ -313,6 +347,7 @@ function resetVisualization() {
     // Hide details panel
     document.getElementById('info-placeholder').classList.remove('hidden');
     document.getElementById('info-content').classList.add('hidden');
+    document.getElementById('section-map-actions').classList.add('hidden');
     
     // Reset D3 styling
     d3.selectAll('.node').classed('selected', false);
@@ -358,6 +393,70 @@ function initControls() {
         mapLabel.innerText = `Decade: ${yr}s`;
         updateMapMarkers();
     });
+
+    // Map play button
+    const playBtn = document.getElementById('map-play-btn');
+    if (playBtn) {
+        playBtn.addEventListener('click', toggleMapPlay);
+    }
+    
+    // Map output volume threshold slider
+    const volumeSlider = document.getElementById('map-volume-slider');
+    const volumeLabel = document.getElementById('map-volume-label');
+    if (volumeSlider) {
+        volumeSlider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            volumeLabel.innerText = val === 1 ? '1 title' : `${val} titles`;
+            updateMapMarkers();
+        });
+    }
+    
+    // Confessional checkbox filters
+    const filterCatholic = document.getElementById('filter-catholic');
+    const filterProtestant = document.getElementById('filter-protestant');
+    const filterMixed = document.getElementById('filter-mixed');
+    
+    if (filterCatholic) filterCatholic.addEventListener('change', updateMapMarkers);
+    if (filterProtestant) filterProtestant.addEventListener('change', updateMapMarkers);
+    if (filterMixed) filterMixed.addEventListener('change', updateMapMarkers);
+}
+
+// Animate decade slider advancing
+function toggleMapPlay() {
+    const playBtn = document.getElementById('map-play-btn');
+    const playIcon = document.getElementById('play-icon');
+    const playText = playBtn.querySelector('span');
+    
+    if (state.isPlaying) {
+        // Pause
+        clearInterval(state.playInterval);
+        state.playInterval = null;
+        state.isPlaying = false;
+        playBtn.classList.remove('playing');
+        playText.innerText = 'Play';
+        playIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+    } else {
+        // Play
+        state.isPlaying = true;
+        playBtn.classList.add('playing');
+        playText.innerText = 'Pause';
+        playIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
+        
+        state.playInterval = setInterval(() => {
+            const slider = document.getElementById('map-year-slider');
+            let currentVal = parseInt(slider.value);
+            let nextVal = currentVal + 10;
+            if (nextVal > 1790) {
+                nextVal = 1500; // Loop back
+            }
+            slider.value = nextVal;
+            
+            // Trigger slider input event manually
+            state.activeYear = nextVal;
+            document.getElementById('map-year-label').innerText = `Decade: ${nextVal}s`;
+            updateMapMarkers();
+        }, 1500);
+    }
 }
 
 // ==========================================================================
@@ -556,6 +655,14 @@ function updateMapMarkers() {
     
     const targetDecade = state.activeYear;
     
+    // Confessional filters state
+    const showCatholic = document.getElementById('filter-catholic')?.checked !== false;
+    const showProtestant = document.getElementById('filter-protestant')?.checked !== false;
+    const showMixed = document.getElementById('filter-mixed')?.checked !== false;
+    
+    // Min printing output volume threshold filter state
+    const minVolume = parseInt(document.getElementById('map-volume-slider')?.value || 1);
+    
     // Aggregate printing volume by city for the active decade (e.g. 1610 to 1619)
     const cityTotals = {};
     
@@ -565,6 +672,11 @@ function updateMapMarkers() {
             const city = row["city"];
             const count = parseInt(row["count"]) || 0;
             const confession = row["confession"];
+            
+            // Apply confession filters
+            if (confession === "Catholic" && !showCatholic) return;
+            if (confession === "Protestant" && !showProtestant) return;
+            if (confession === "Mixed" && !showMixed) return;
             
             if (!cityTotals[city]) {
                 cityTotals[city] = {
@@ -579,7 +691,7 @@ function updateMapMarkers() {
     // Render markers on map
     for (const [city, data] of Object.entries(cityTotals)) {
         const coords = cityCoordinates[city];
-        if (!coords || data.count === 0) continue;
+        if (!coords || data.count < minVolume) continue;
         
         // Scale size dynamically based on map zoom level to prevent massive circles on zoom out
         const currentZoom = state.map.getZoom();
@@ -591,14 +703,30 @@ function updateMapMarkers() {
         if (data.confession === "Catholic") color = "#d4af37"; // Gold
         else if (data.confession === "Protestant") color = "#5b21b6"; // Deep Purple
         
+        // Set 'pulse-marker' class for active high-production centers (>500 titles/decade)
         const marker = L.circleMarker(coords, {
             radius: radius,
             fillColor: color,
             color: "#ffffff",
             weight: 1.0,
             opacity: 0.8,
-            fillOpacity: 0.75
+            fillOpacity: 0.75,
+            className: data.count > 500 ? 'pulse-marker' : ''
         }).addTo(state.map);
+        
+        // Interactive mouseover hover highlight style
+        marker.on('mouseover', function () {
+            this.setStyle({
+                weight: 2.5,
+                fillOpacity: 0.95
+            });
+        });
+        marker.on('mouseout', function () {
+            this.setStyle({
+                weight: 1.0,
+                fillOpacity: 0.75
+            });
+        });
         
         // Rich tooltip detail
         marker.bindTooltip(`
@@ -637,6 +765,42 @@ function updateMapMarkers() {
             `;
             
             document.getElementById('info-degree').innerText = 'N/A';
+            
+            // Show map actions panel for highlighting network actors
+            const mapActions = document.getElementById('section-map-actions');
+            mapActions.classList.remove('hidden');
+            
+            const highlightBtn = document.getElementById('btn-highlight-city-actors');
+            // Remove previous event listeners by cloning
+            const newHighlightBtn = highlightBtn.cloneNode(true);
+            highlightBtn.parentNode.replaceChild(newHighlightBtn, highlightBtn);
+            
+            newHighlightBtn.innerText = `Highlight ${city} Actors in Network`;
+            newHighlightBtn.addEventListener('click', () => {
+                // 1. Switch to network tab
+                const netTabBtn = document.querySelector('[data-tab="network-tab"]');
+                if (netTabBtn) netTabBtn.click();
+                
+                // 2. Clear current search input
+                document.getElementById('search-input').value = '';
+                state.searchQuery = '';
+                
+                // 3. Highlight D3 nodes matching this city
+                d3.selectAll('.node').classed('selected', n => getNodeCity(n) === city);
+                
+                // 4. Highlight lines connected to those nodes
+                d3.selectAll('.link')
+                  .classed('highlighted', l => {
+                      const sCity = getNodeCity(l.source);
+                      const tCity = getNodeCity(l.target);
+                      return sCity === city || tCity === city;
+                  })
+                  .style('stroke-opacity', l => {
+                      const sCity = getNodeCity(l.source);
+                      const tCity = getNodeCity(l.target);
+                      return (sCity === city || tCity === city) ? 0.9 : 0.05;
+                  });
+            });
         });
         
         state.mapMarkers.push(marker);
