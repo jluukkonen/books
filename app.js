@@ -23,6 +23,7 @@ const state = {
     // Leaflet variables
     map: null,
     mapMarkers: [],
+    mapLines: [],
     
     // Chart.js instances
     charts: {
@@ -252,6 +253,62 @@ function selectNode(nodeId) {
         state.map.setView(cityCoordinates[associatedCity], 7);
     }
     
+    // Draw geographic flow lines on the map if it exists
+    if (state.map) {
+        // Clear previous lines
+        if (state.mapLines) {
+            state.mapLines.forEach(l => state.map.removeLayer(l));
+        }
+        state.mapLines = [];
+        
+        if (associatedCity && cityCoordinates[associatedCity]) {
+            const srcCoords = cityCoordinates[associatedCity];
+            
+            // Find all links connected to the selected node
+            const connectedLinks = state.networkData.links.filter(l => 
+                l.source === nodeId || l.target === nodeId || 
+                (l.source && l.source.id === nodeId) || 
+                (l.target && l.target.id === nodeId)
+            );
+            
+            connectedLinks.forEach(link => {
+                const targetNodeObj = (link.source === nodeId || (link.source && link.source.id === nodeId)) ? link.target : link.source;
+                const targetId = typeof targetNodeObj === 'object' ? targetNodeObj.id : targetNodeObj;
+                const targetNode = state.networkData.nodes.find(n => n.id === targetId);
+                
+                if (targetNode) {
+                    const destCity = getNodeCity(targetNode);
+                    if (destCity && cityCoordinates[destCity] && destCity !== associatedCity) {
+                        const destCoords = cityCoordinates[destCity];
+                        
+                        // Set style based on connection type
+                        const isCensor = node.type === 'censor';
+                        const lineColor = isCensor ? '#38bdf8' : '#f43f5e'; // sky blue for censors, rose for publishers
+                        
+                        // Draw line
+                        const polyline = L.polyline([srcCoords, destCoords], {
+                            color: lineColor,
+                            weight: 3,
+                            opacity: 0.8,
+                            dashArray: '8, 12',
+                            className: 'flow-polyline' // Class for CSS animation
+                        }).addTo(state.map);
+                        
+                        // Bind tooltip to the line
+                        polyline.bindTooltip(`
+                            <div style="font-family: inherit; font-size:11px;">
+                                <strong>Geographic link:</strong><br/>
+                                ${node.id} (${associatedCity}) &harr; ${targetNode.id} (${destCity})
+                            </div>
+                        `, { sticky: true });
+                        
+                        state.mapLines.push(polyline);
+                    }
+                }
+            });
+        }
+    }
+    
     // Highlight in D3 svg
     d3.selectAll('.node').classed('selected', n => n.id === nodeId);
     
@@ -348,6 +405,12 @@ function resetVisualization() {
     document.getElementById('info-placeholder').classList.remove('hidden');
     document.getElementById('info-content').classList.add('hidden');
     document.getElementById('section-map-actions').classList.add('hidden');
+    
+    // Clear geographic flow lines
+    if (state.mapLines && state.map) {
+        state.mapLines.forEach(l => state.map.removeLayer(l));
+        state.mapLines = [];
+    }
     
     // Reset D3 styling
     d3.selectAll('.node').classed('selected', false);
@@ -649,9 +712,13 @@ function initMap() {
 function updateMapMarkers() {
     if (!state.timelineData || !state.map) return;
     
-    // Clear old markers
+    // Clear old markers and lines
     state.mapMarkers.forEach(m => state.map.removeLayer(m));
     state.mapMarkers = [];
+    if (state.mapLines) {
+        state.mapLines.forEach(l => state.map.removeLayer(l));
+        state.mapLines = [];
+    }
     
     const targetDecade = state.activeYear;
     

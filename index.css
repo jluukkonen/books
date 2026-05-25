@@ -848,3 +848,15 @@ input[type="range"]::-webkit-slider-thumb:hover {
 .hidden {
     display: none !important;
 }
+
+/* Geographic flow polylines animation */
+@keyframes flow-dash {
+    to {
+        stroke-dashoffset: -40;
+    }
+}
+
+.flow-polyline {
+    animation: flow-dash 2s linear infinite;
+    filter: drop-shadow(0 0 3px rgba(0,0,0,0.5));
+}
