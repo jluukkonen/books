@@ -8,7 +8,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=UnifrakturMaguntia&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
     
     <!-- CSS Dependencies -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -20,6 +20,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -161,8 +162,19 @@
                     </div>
                     <div id="network-container" class="viz-container">
                         <div class="loading-overlay" id="network-loading">
-                            <div class="spinner"></div>
-                            <p>Loading network graph...</p>
+                            <div class="loading-ink-splatter top-left"></div>
+                            <div class="loading-ink-splatter bottom-right"></div>
+                            <model-viewer 
+                                src="assets/glb/Meshy_AI_IHS_Christogram_0525154851_texture.glb" 
+                                auto-rotate 
+                                camera-controls 
+                                shadow-intensity="1.5"
+                                style="width: 260px; height: 260px; background: transparent; margin-bottom: 10px;"
+                                class="loader-3d-model">
+                            </model-viewer>
+                            <h3 class="loading-title">Vetting the Holy Roman Empire</h3>
+                            <p class="loading-desc">Loading censorship records & actor network graph...</p>
+                            <div class="spinner" style="margin-top: 15px;"></div>
                         </div>
                         <svg id="network-svg" width="100%" height="100%"></svg>
                     </div>

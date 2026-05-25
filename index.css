@@ -972,19 +972,65 @@ input[type="range"]::-moz-range-progress {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(11, 15, 25, 0.85);
+    background-color: #0b0f19;
+    background-image: url('assets/branding/grey_parchment.jpg');
+    background-size: cover;
+    background-blend-mode: multiply;
+    opacity: 0.98;
     z-index: 100;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 16px;
+    overflow: hidden;
 }
 
-.loading-overlay p {
-    font-size: 13px;
+.loading-title {
+    font-family: 'UnifrakturMaguntia', serif;
+    font-size: 32px;
+    color: #e2e8f0;
+    margin: 8px 0 4px 0;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+.loading-desc {
+    font-family: 'IM Fell English', serif;
+    font-size: 14px;
     color: #94a3b8;
-    font-weight: 500;
+    font-style: italic;
+    margin: 0;
+    text-align: center;
+}
+
+.loading-ink-splatter {
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    background-image: url('assets/UI/ink_splatter.jpg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    mix-blend-mode: multiply;
+    opacity: 0.35;
+    pointer-events: none;
+    z-index: 101;
+}
+
+.loading-ink-splatter.top-left {
+    top: -10px;
+    left: -10px;
+}
+
+.loading-ink-splatter.bottom-right {
+    bottom: -10px;
+    right: -10px;
+    transform: rotate(180deg);
+}
+
+.loader-3d-model {
+    z-index: 102;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.4));
 }
 
 .spinner {
