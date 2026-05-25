@@ -861,3 +861,26 @@ input[type="range"]::-webkit-slider-thumb:hover {
     animation: flow-dash 2s linear infinite;
     filter: drop-shadow(0 0 3px rgba(0,0,0,0.5));
 }
+
+/* Neon glow classes for active city markers (Option 1) */
+.glow-growth {
+    filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.85));
+}
+
+.glow-decline {
+    filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.85));
+}
+
+.glow-neutral {
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.45));
+}
+
+/* Faint neon glow for previous decade comparison rings */
+.prev-marker-glow-growth {
+    filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.7));
+}
+
+.prev-marker-glow-decline {
+    filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.7));
+}
+

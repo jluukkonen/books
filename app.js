@@ -787,49 +787,78 @@ function updateMapMarkers() {
             prevRadius = Math.max(2.5, Math.min(maxCap, prevRadius));
         }
         
-        // Draw faint comparison outline of the previous decade FIRST (so it sits behind the solid marker)
-        if (prevRadius > 0 && Math.abs(radius - prevRadius) > 0.5) {
-            const isGrowth = radius > prevRadius;
+        // Determine growth/decline characteristics
+        const isComparisonAvailable = prevRadius > 0;
+        const isSignificantChange = isComparisonAvailable && Math.abs(radius - prevRadius) > 0.5;
+        const isGrowth = isSignificantChange && radius > prevRadius;
+        const isDecline = isSignificantChange && prevRadius > radius;
+        
+        // 1. Draw glowing comparison outline of the previous decade FIRST (sits behind the solid marker)
+        if (isSignificantChange) {
             const outlineColor = isGrowth ? "#10b981" : "#ef4444"; // emerald green for growth, crimson red for decline
+            const prevGlowClass = isGrowth ? "prev-marker-glow-growth" : "prev-marker-glow-decline";
             
             const prevMarker = L.circleMarker(coords, {
                 radius: prevRadius,
                 fillColor: "transparent",
                 color: outlineColor,
-                weight: 1.5,
-                dashArray: "3, 6",
-                opacity: 0.45,
+                weight: 2.0,
+                dashArray: "4, 6",
+                opacity: 0.75,
                 fillOpacity: 0,
+                className: prevGlowClass,
                 interactive: false // Click events pass through to the main marker
             }).addTo(state.map);
             state.mapMarkers.push(prevMarker);
+        }
+        
+        // 2. Determine styling parameters for the active main city marker
+        let borderStrokeColor = "#ffffff";
+        let strokeWeight = 1.0;
+        let glowClass = "glow-neutral";
+        
+        if (isSignificantChange) {
+            if (isGrowth) {
+                borderStrokeColor = "#10b981"; // Emerald green
+                strokeWeight = 2.0;
+                glowClass = "glow-growth";
+            } else if (isDecline) {
+                borderStrokeColor = "#ef4444"; // Crimson red
+                strokeWeight = 2.0;
+                glowClass = "glow-decline";
+            }
+        }
+        
+        let markerClasses = [glowClass];
+        if (data.count > 500) {
+            markerClasses.push('pulse-marker');
         }
         
         let color = "#94a3b8"; // Mixed / Gray
         if (data.confession === "Catholic") color = "#d4af37"; // Gold
         else if (data.confession === "Protestant") color = "#5b21b6"; // Deep Purple
         
-        // Set 'pulse-marker' class for active high-production centers (>500 titles/decade)
+        // Create the active main city marker
         const marker = L.circleMarker(coords, {
             radius: radius,
             fillColor: color,
-            color: "#ffffff",
-            weight: 1.0,
-            opacity: 0.8,
+            color: borderStrokeColor,
+            weight: strokeWeight,
+            opacity: 0.9,
             fillOpacity: 0.75,
-            className: data.count > 500 ? 'pulse-marker' : ''
+            className: markerClasses.join(' ')
         }).addTo(state.map);
         
         // Interactive mouseover hover highlight style
         marker.on('mouseover', function () {
             this.setStyle({
-                weight: 2.5,
+                weight: strokeWeight + 1.5,
                 fillOpacity: 0.95
             });
         });
         marker.on('mouseout', function () {
             this.setStyle({
-                weight: 1.0,
+                weight: strokeWeight,
                 fillOpacity: 0.75
             });
         });
