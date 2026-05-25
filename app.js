@@ -621,6 +621,10 @@ function initNetworkGraph() {
 function updateNetworkGraph() {
     if (!state.networkData) return;
     
+    const container = document.getElementById('network-container');
+    const width = container ? container.clientWidth : 800;
+    const height = container ? container.clientHeight : 600;
+    
     // 1. Filter Links based on threshold
     let links = state.networkData.links.map(l => ({...l}))
         .filter(l => l.weight >= state.networkThreshold);
