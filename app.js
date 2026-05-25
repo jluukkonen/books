@@ -462,8 +462,6 @@ function updateInfoPanel(node) {
 // Reset all panels
 function resetVisualization() {
     state.selectedNode = null;
-    state.highlightNode = null;
-    state.highlightLinks.clear();
     state.highlightCity = null;
     document.getElementById('search-input').value = '';
     
@@ -674,7 +672,7 @@ function updateNetworkGraph() {
         })
         .attr("stroke", d => d.is_jesuit ? "#ffffff" : "none")
         .attr("stroke-width", d => d.is_jesuit ? 1.5 : 0)
-        .call(drag(state.simulation))
+        .call(drag())
         .on("click", (e, d) => {
             selectNode(d.id);
             e.stopPropagation();
@@ -753,7 +751,7 @@ function updateNetworkGraph() {
 }
 
 // Drag & Drop handlers
-function drag(simulation) {
+function drag() {
     function dragstarted(event) {
         if (!event.active) state.simulation.alphaTarget(0.3).restart();
         event.subject.fx = event.subject.x;
