@@ -721,6 +721,7 @@ function updateMapMarkers() {
     }
     
     const targetDecade = state.activeYear;
+    const previousDecade = targetDecade - 10;
     
     // Confessional filters state
     const showCatholic = document.getElementById('filter-catholic')?.checked !== false;
@@ -730,21 +731,23 @@ function updateMapMarkers() {
     // Min printing output volume threshold filter state
     const minVolume = parseInt(document.getElementById('map-volume-slider')?.value || 1);
     
-    // Aggregate printing volume by city for the active decade (e.g. 1610 to 1619)
+    // Aggregate printing volume by city for the active decade and previous decade
     const cityTotals = {};
+    const prevCityTotals = {};
     
     state.timelineData.forEach(row => {
         const yr = parseInt(row["year"]);
+        const city = row["city"];
+        const count = parseInt(row["count"]) || 0;
+        const confession = row["confession"];
+        
+        // Apply confession filters
+        if (confession === "Catholic" && !showCatholic) return;
+        if (confession === "Protestant" && !showProtestant) return;
+        if (confession === "Mixed" && !showMixed) return;
+        
+        // Active decade
         if (yr >= targetDecade && yr < targetDecade + 10) {
-            const city = row["city"];
-            const count = parseInt(row["count"]) || 0;
-            const confession = row["confession"];
-            
-            // Apply confession filters
-            if (confession === "Catholic" && !showCatholic) return;
-            if (confession === "Protestant" && !showProtestant) return;
-            if (confession === "Mixed" && !showMixed) return;
-            
             if (!cityTotals[city]) {
                 cityTotals[city] = {
                     count: 0,
@@ -752,6 +755,15 @@ function updateMapMarkers() {
                 };
             }
             cityTotals[city].count += count;
+        }
+        // Previous decade
+        else if (previousDecade >= 1500 && yr >= previousDecade && yr < previousDecade + 10) {
+            if (!prevCityTotals[city]) {
+                prevCityTotals[city] = {
+                    count: 0
+                };
+            }
+            prevCityTotals[city].count += count;
         }
     });
     
@@ -766,6 +778,32 @@ function updateMapMarkers() {
         let radius = (Math.pow(data.count, 0.35) * 1.1 + 1.2) * zoomFactor;
         const maxCap = Math.max(8, currentZoom * 4.5);
         radius = Math.max(2.5, Math.min(maxCap, radius));
+        
+        // Calculate previous decade radius for comparison
+        let prevRadius = 0;
+        const prevData = prevCityTotals[city];
+        if (prevData && prevData.count >= minVolume) {
+            prevRadius = (Math.pow(prevData.count, 0.35) * 1.1 + 1.2) * zoomFactor;
+            prevRadius = Math.max(2.5, Math.min(maxCap, prevRadius));
+        }
+        
+        // Draw faint comparison outline of the previous decade FIRST (so it sits behind the solid marker)
+        if (prevRadius > 0 && Math.abs(radius - prevRadius) > 0.5) {
+            const isGrowth = radius > prevRadius;
+            const outlineColor = isGrowth ? "#10b981" : "#ef4444"; // emerald green for growth, crimson red for decline
+            
+            const prevMarker = L.circleMarker(coords, {
+                radius: prevRadius,
+                fillColor: "transparent",
+                color: outlineColor,
+                weight: 1.5,
+                dashArray: "3, 6",
+                opacity: 0.45,
+                fillOpacity: 0,
+                interactive: false // Click events pass through to the main marker
+            }).addTo(state.map);
+            state.mapMarkers.push(prevMarker);
+        }
         
         let color = "#94a3b8"; // Mixed / Gray
         if (data.confession === "Catholic") color = "#d4af37"; // Gold
@@ -889,9 +927,20 @@ function updateMapMarkers() {
             const bioText = document.getElementById('info-biography');
             document.getElementById('section-biography').classList.remove('hidden');
             
+            // Reconstruct text to dynamically show active and previous decade comparison in sidebar
+            let comparisonText = "";
+            if (prevData && prevData.count > 0) {
+                const diff = data.count - prevData.count;
+                const percent = ((diff / prevData.count) * 100).toFixed(1);
+                const verb = diff >= 0 ? "increased" : "decreased";
+                const changeColor = diff >= 0 ? "#10b981" : "#ef4444";
+                const sign = diff >= 0 ? "+" : "";
+                comparisonText = ` This represents a <strong style="color: ${changeColor};">${sign}${percent}%</strong> output change (${verb} by ${Math.abs(diff)} titles) compared to the previous decade (${previousDecade}s: ${prevData.count} titles).`;
+            }
+            
             bioText.innerHTML = `
                 Historically classified as a <strong>${data.confession}</strong> printing hub.<br/><br/>
-                During the <strong>${targetDecade}s</strong>, publishers in ${city} released a total of <strong>${data.count}</strong> cataloged titles in our database.
+                During the <strong>${targetDecade}s</strong>, publishers in ${city} released a total of <strong>${data.count}</strong> cataloged titles in our database.${comparisonText}
             `;
             
             document.getElementById('info-degree').innerText = 'N/A';
