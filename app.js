@@ -561,6 +561,28 @@ function initNetworkGraph() {
     state.svg = d3.select("#network-svg")
         .attr("viewBox", [0, 0, width, height]);
         
+    // Define SVG glow filters
+    const defs = state.svg.append("defs");
+    const createGlowFilter = (id, color) => {
+        const filter = defs.append("filter")
+            .attr("id", id)
+            .attr("x", "-30%")
+            .attr("y", "-30%")
+            .attr("width", "160%")
+            .attr("height", "160%");
+        
+        filter.append("feGaussianBlur")
+            .attr("stdDeviation", "4")
+            .attr("result", "blur");
+            
+        const merge = filter.append("feMerge");
+        merge.append("feMergeNode").attr("in", "blur");
+        merge.append("feMergeNode").attr("in", "SourceGraphic");
+    };
+    createGlowFilter("glow-censor", "#38bdf8");
+    createGlowFilter("glow-publisher", "#f43f5e");
+    createGlowFilter("glow-jesuit", "#fbbf24");
+        
     state.gContainer = state.svg.append("g");
     
     // Add Pan & Zoom support
@@ -613,13 +635,25 @@ function updateNetworkGraph() {
         
     // Draw nodes
     const node = state.gContainer.append("g")
-        .selectAll("circle")
+        .selectAll("path")
         .data(nodes)
-        .join("circle")
-        .attr("class", "node")
-        .attr("r", d => {
-            if (d.type === 'publisher') return 6 + Math.min(d.degree * 0.4, 16);
-            return d.is_jesuit ? 7 + Math.min(d.degree * 0.5, 14) : 4 + Math.min(d.degree * 0.3, 10);
+        .join("path")
+        .attr("class", d => {
+            let baseClass = "node";
+            if (d.type === 'publisher') return baseClass + " pub-glow";
+            return d.is_jesuit ? baseClass + " jes-glow" : baseClass + " cns-glow";
+        })
+        .attr("d", d => {
+            const r = d.type === 'publisher' ? 6 + Math.min(d.degree * 0.4, 16) : 
+                      (d.is_jesuit ? 7 + Math.min(d.degree * 0.5, 14) : 4 + Math.min(d.degree * 0.3, 10));
+            if (d.type === 'publisher') {
+                // Circle path centered at 0,0
+                return `M 0,0 m -${r},0 a ${r},${r} 0 1,0 ${r*2},0 a ${r},${r} 0 1,0 -${r*2},0`;
+            } else {
+                // Hexagon path centered at 0,0
+                const h = r * Math.sqrt(3) / 2;
+                return `M ${r},0 L ${r/2},${h} L ${-r/2},${h} L ${-r},0 L ${-r/2},${-h} L ${r/2},${-h} Z`;
+            }
         })
         .attr("fill", d => {
             if (d.type === 'publisher') return "#f43f5e"; // Rose
@@ -633,18 +667,47 @@ function updateNetworkGraph() {
             e.stopPropagation();
         });
         
-    // Interactive hover triggers
+    // Interactive hover triggers (HTML Tooltips & Link Flow Animations)
     node.on("mouseover", (e, d) => {
-        // Highlight active connections
+        // 1. Show dynamic floating tooltip card
+        const tooltip = d3.select("#network-tooltip");
+        tooltip.html(`
+            <div style="font-weight: 700; font-size:12px; color:#ffffff; margin-bottom:4px;">${d.id}</div>
+            <div style="color:#94a3b8; margin-bottom:2px;"><strong style="color:#cbd5e1;">Type:</strong> ${d.type === 'censor' ? (d.is_jesuit ? 'Jesuit Censor' : 'Censor') : 'Publisher/Printer'}</div>
+            <div style="color:#94a3b8; margin-bottom:2px;"><strong style="color:#cbd5e1;">City:</strong> ${getNodeCity(d) || 'Unknown'}</div>
+            <div style="color:#94a3b8;"><strong style="color:#cbd5e1;">Connections:</strong> ${d.degree} nodes</div>
+        `)
+        .classed("hidden", false);
+        
+        // 2. Highlight active connections and trigger flow animation in the node's color
+        const highlightColor = d.type === 'censor' ? (d.is_jesuit ? '#fbbf24' : '#38bdf8') : '#f43f5e';
+        
         link.classed("highlighted", l => l.source.id === d.id || l.target.id === d.id)
-            .style("stroke-opacity", l => (l.source.id === d.id || l.target.id === d.id) ? 0.9 : 0.08);
-    }).on("mouseout", () => {
+            .style("stroke", l => (l.source.id === d.id || l.target.id === d.id) ? highlightColor : '#334155')
+            .style("stroke-opacity", l => (l.source.id === d.id || l.target.id === d.id) ? 0.95 : 0.05);
+    })
+    .on("mousemove", (e) => {
+        // Follow cursor position
+        d3.select("#network-tooltip")
+            .style("left", (e.pageX + 15) + "px")
+            .style("top", (e.pageY - 15) + "px");
+    })
+    .on("mouseout", () => {
+        // Hide tooltip
+        d3.select("#network-tooltip").classed("hidden", true);
+        
+        // Reset links to selected highlight or default
         if (state.selectedNode) {
-            // Keep selected node highlighted
+            const selectedNodeObj = state.networkData.nodes.find(n => n.id === state.selectedNode);
+            const highlightColor = selectedNodeObj ? (selectedNodeObj.type === 'censor' ? (selectedNodeObj.is_jesuit ? '#fbbf24' : '#38bdf8') : '#f43f5e') : '#38bdf8';
+            
             link.classed("highlighted", l => l.source.id === state.selectedNode || l.target.id === state.selectedNode)
-                .style("stroke-opacity", l => (l.source.id === state.selectedNode || l.target.id === state.selectedNode) ? 0.9 : 0.08);
+                .style("stroke", l => (l.source.id === state.selectedNode || l.target.id === state.selectedNode) ? highlightColor : '#334155')
+                .style("stroke-opacity", l => (l.source.id === state.selectedNode || l.target.id === state.selectedNode) ? 0.95 : 0.05);
         } else {
-            link.classed("highlighted", false).style("stroke-opacity", 0.35);
+            link.classed("highlighted", false)
+                .style("stroke", '#334155')
+                .style("stroke-opacity", 0.35);
         }
     });
 
@@ -680,8 +743,7 @@ function updateNetworkGraph() {
             .attr("y2", d => d.target.y);
 
         node
-            .attr("cx", d => d.x)
-            .attr("cy", d => d.y);
+            .attr("transform", d => `translate(${d.x}, ${d.y})`);
             
         labels
             .attr("x", d => d.x)
