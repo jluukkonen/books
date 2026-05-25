@@ -760,12 +760,12 @@ function updateMapMarkers() {
         const coords = cityCoordinates[city];
         if (!coords || data.count < minVolume) continue;
         
-        // Scale with log2 to compress the huge count range, then scale by zoom
+        // Scale with power-law (exponent 0.35) for a balanced sizing dynamic, then scale by zoom
         const currentZoom = state.map.getZoom();
         const zoomFactor = Math.pow(1.5, currentZoom - 6);
-        let radius = (Math.log2(data.count + 1) * 1.2 + 1.5) * zoomFactor;
-        const maxCap = Math.max(8, currentZoom * 3);
-        radius = Math.max(2, Math.min(maxCap, radius));
+        let radius = (Math.pow(data.count, 0.35) * 1.1 + 1.2) * zoomFactor;
+        const maxCap = Math.max(8, currentZoom * 4.5);
+        radius = Math.max(2.5, Math.min(maxCap, radius));
         
         let color = "#94a3b8"; // Mixed / Gray
         if (data.confession === "Catholic") color = "#d4af37"; // Gold
