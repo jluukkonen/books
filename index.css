@@ -44,8 +44,8 @@ body {
 /* Sidebar Controls */
 .sidebar {
     width: 380px;
-    background-color: #0f172a;
-    border-right: 1px solid #1e293b;
+    background: linear-gradient(180deg, #0f172a 0%, #090d16 100%);
+    border-right: 1px solid rgba(255, 255, 255, 0.04);
     display: flex;
     flex-direction: column;
     padding: 24px;
@@ -172,32 +172,38 @@ body {
     top: 58px;
     left: 0;
     right: 0;
-    background-color: #1e293b;
-    border: 1px solid #475569;
-    border-radius: 8px;
-    max-height: 200px;
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    max-height: 220px;
     overflow-y: auto;
     z-index: 1000;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 4px;
 }
 
 .search-item {
     padding: 10px 14px;
     cursor: pointer;
-    font-size: 12.5px;
-    transition: background 0.15s ease;
-    border-bottom: 1px solid #334155;
+    font-size: 13px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border-bottom: none;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 2px;
 }
 
 .search-item:last-child {
-    border-bottom: none;
+    margin-bottom: 0;
 }
 
 .search-item:hover {
-    background-color: #334155;
+    background-color: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
 }
 
 .search-item .search-type {
@@ -226,12 +232,13 @@ body {
 }
 
 .badge {
-    background-color: #334155;
-    color: #f8fafc;
+    background: rgba(56, 189, 248, 0.12);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.2);
     font-size: 11px;
     font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 4px;
+    padding: 2px 8px;
+    border-radius: 6px;
 }
 
 input[type="range"] {
@@ -406,19 +413,21 @@ input[type="range"]::-moz-range-progress {
     font-weight: 600;
     cursor: pointer;
     text-align: center;
-    transition: all 0.15s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: inherit;
 }
 
 .btn-secondary {
-    background-color: #334155;
+    background: rgba(51, 65, 85, 0.3);
     color: #e2e8f0;
-    border: 1px solid #475569;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .btn-secondary:hover {
-    background-color: #475569;
-    color: #f8fafc;
+    background: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.4);
+    color: #38bdf8;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
 }
 
 /* ==========================================================================
@@ -1109,14 +1118,18 @@ input[type="range"]::-moz-range-progress {
 /* Dynamic Sidebar City woodcut visual blending */
 .sidebar-city-image {
     width: 100%;
-    height: 120px;
+    height: 130px;
     object-fit: cover;
     border-radius: 8px;
-    border: 1px solid #334155;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     filter: grayscale(1) contrast(1.1) brightness(0.85);
     mix-blend-mode: screen;
-    opacity: 0.9;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    opacity: 0.95;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    transition: border-color 0.3s ease;
+}
+.sidebar-city-image:hover {
+    border-color: rgba(56, 189, 248, 0.3);
 }
 
 /* Custom prev decade HTML marker ring */
