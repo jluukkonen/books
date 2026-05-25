@@ -20,14 +20,18 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/3d-force-graph"></script>
 </head>
 <body>
     <div class="app-container">
         <!-- Sidebar / Filter Controls & Info panel -->
         <aside class="sidebar">
             <div class="brand">
-                <h1>Vetting the HRE</h1>
-                <span class="subtitle">300 Years of Book Censorship (1500–1800)</span>
+                <img src="assets/branding/branding_logo.jpg" alt="Vetting the HRE Logo" class="brand-logo">
+                <div>
+                    <h1>Vetting the HRE</h1>
+                    <span class="subtitle">300 Years of Book Censorship (1500–1800)</span>
+                </div>
             </div>
             
             <!-- Controls Box -->
@@ -52,9 +56,12 @@
                 </div>
                 
                 <!-- Jesuit Only toggle -->
-                <div class="control-group checkbox-group">
-                    <input type="checkbox" id="jesuit-checkbox">
-                    <label for="jesuit-checkbox">Show Jesuit Censors Only</label>
+                <div class="control-group checkbox-group switch-group">
+                    <span class="control-label-text">Show Jesuit Censors Only</span>
+                    <label class="switch-toggle">
+                        <input type="checkbox" id="jesuit-checkbox">
+                        <span class="switch-slider"></span>
+                    </label>
                 </div>
                 
                 <!-- Reset Button -->
@@ -72,6 +79,9 @@
                     <p>Click on any node in the network or a city on the map to inspect its details and metrics.</p>
                 </div>
                 <div class="info-content hidden" id="info-content">
+                    <div class="info-section hidden" id="section-city-image" style="margin-bottom: 12px;">
+                        <img id="sidebar-city-image" class="sidebar-city-image" src="" alt="City view">
+                    </div>
                     <h3 id="info-name">Actor Name</h3>
                     <div class="tag-row">
                         <span id="info-tag-type" class="badge badge-type">Censor</span>
@@ -79,23 +89,53 @@
                     </div>
                     
                     <div class="info-section" id="section-gnd">
-                        <h4>GND Authority link</h4>
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                            <span>GND Authority Link</span>
+                        </h4>
                         <a href="#" id="info-gnd-link" target="_blank" class="gnd-link">GND ID</a>
                     </div>
                     
                     <div class="info-section" id="section-occupations">
-                        <h4>Occupations / Background</h4>
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                            <span>Occupations & Background</span>
+                        </h4>
                         <p id="info-occupations">Professor of theology, Jesuit priest.</p>
                     </div>
                     
                     <div class="info-section" id="section-biography">
-                        <h4>Biographical Notes</h4>
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                            <span>Biographical Notes</span>
+                        </h4>
                         <p id="info-biography">Born 1572 in Munich, taught at Ingolstadt, died 1632.</p>
                     </div>
                     
+                    <div class="info-section hidden" id="section-city-timeline">
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                            <span>300-Year Output Trend</span>
+                        </h4>
+                        <div class="city-chart-wrapper">
+                            <canvas id="city-timeline-chart"></canvas>
+                        </div>
+                    </div>
+                    
                     <div class="info-section" id="section-stats">
-                        <h4>Degree Centrality</h4>
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                            <span>Degree Centrality</span>
+                        </h4>
                         <p>This actor is connected to <strong id="info-degree">12</strong> other nodes in the active graph.</p>
+                    </div>
+                    
+                    <div class="info-section hidden" id="section-map-actions">
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                            <span>Map Actions</span>
+                        </h4>
+                        <button id="btn-highlight-city-actors" class="btn btn-secondary">Highlight City Actors in Network</button>
                     </div>
                 </div>
             </div>
@@ -125,16 +165,22 @@
                             <div class="spinner"></div>
                             <p>Loading network graph...</p>
                         </div>
-                        <svg id="network-svg" width="100%" height="100%"></svg>
                     </div>
                 </div>
                 
                 <!-- TAB 2: GEOGRAPHIC MAP -->
                 <div class="tab-content" id="map-tab">
                     <div class="map-controls">
+                        <!-- Play Button & Decade Slider -->
                         <div class="slider-container">
                             <div class="slider-header">
-                                <span>Timeline Slider (1500–1800)</span>
+                                <div class="slider-header-left">
+                                    <button id="map-play-btn" class="map-play-btn">
+                                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="currentColor" id="play-icon" style="margin-right: 4px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                        <span>Play</span>
+                                    </button>
+                                    <span class="slider-title">Timeline Slider (1500–1800)</span>
+                                </div>
                                 <span id="map-year-label" class="badge">Decade: 1610s</span>
                             </div>
                             <input type="range" id="map-year-slider" min="1500" max="1790" value="1610" step="10">
@@ -148,10 +194,42 @@
                                 <span>1800</span>
                             </div>
                         </div>
+                        
+                        <!-- Output Volume Threshold -->
+                        <div class="map-volume-container">
+                            <div class="slider-header">
+                                <span class="slider-title">Min Volume</span>
+                                <span id="map-volume-label" class="badge">1 title</span>
+                            </div>
+                            <input type="range" id="map-volume-slider" min="1" max="100" value="1" step="1">
+                        </div>
+                        
+                        <!-- Confessional Filters -->
                         <div class="map-legend">
-                            <span class="legend-item"><span class="legend-dot color-catholic-hub"></span>Catholic printing hubs</span>
-                            <span class="legend-item"><span class="legend-dot color-protestant-hub"></span>Protestant printing hubs</span>
-                            <span class="legend-item"><span class="legend-dot color-mixed-hub"></span>Mixed printing hubs</span>
+                            <span class="legend-title">Confession Filters</span>
+                            <div class="legend-filters">
+                                <div class="filter-switch-item">
+                                    <label class="switch-toggle mini-switch">
+                                        <input type="checkbox" id="filter-catholic" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                    <span class="filter-label-text"><span class="legend-dot color-catholic-hub"></span>Catholic</span>
+                                </div>
+                                <div class="filter-switch-item">
+                                    <label class="switch-toggle mini-switch">
+                                        <input type="checkbox" id="filter-protestant" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                    <span class="filter-label-text"><span class="legend-dot color-protestant-hub"></span>Protestant</span>
+                                </div>
+                                <div class="filter-switch-item">
+                                    <label class="switch-toggle mini-switch">
+                                        <input type="checkbox" id="filter-mixed" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                    <span class="filter-label-text"><span class="legend-dot color-mixed-hub"></span>Mixed</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div id="map-container" class="viz-container"></div>
@@ -189,6 +267,8 @@
             </div>
         </main>
     </div>
+    
+    <div id="network-tooltip" class="network-tooltip hidden"></div>
     
     <!-- Custom JS Application Logic -->
     <script src="app.js"></script>

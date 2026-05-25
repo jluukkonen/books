@@ -8,26 +8,33 @@ const state = {
     selectedNode: null,
     activeYear: 1610,
     searchQuery: '',
+    isPlaying: false,
+    playInterval: null,
     
     // Raw Datasets
     networkData: null,
     timelineData: null,
     
-    // D3 variables
-    svg: null,
-    simulation: null,
-    gContainer: null,
+    // 3D Graph variables
+    graph3D: null,
+    highlightNode: null,
+    highlightLinks: new Set(),
+    highlightCity: null,
     
     // Leaflet variables
     map: null,
     mapMarkers: [],
+    mapLines: [],
     
     // Chart.js instances
     charts: {
         leipzigFrankfurt: null,
         confessional: null,
-        language: null
-    }
+        language: null,
+        cityTimeline: null
+    },
+    selectedCity: null,
+    selectedCityConfession: null
 };
 
 // Coordinate database cities with lat/long for leaflet
@@ -81,6 +88,29 @@ const cityCoordinates = {
     "Prague": [50.0755, 14.4378],
     "Danzig": [54.3520, 18.6466]
 };
+
+// Heuristic to match a network node to a geographic city
+function getNodeCity(node) {
+    if (!node) return null;
+    let searchString = '';
+    if (typeof node === 'string') {
+        searchString = node.toLowerCase();
+    } else {
+        searchString = ((node.id || '') + ' ' + (node.biography || '') + ' ' + (node.occupations || '')).toLowerCase();
+    }
+    for (const city of Object.keys(cityCoordinates)) {
+        if (searchString.includes(city.toLowerCase())) {
+            return city;
+        }
+    }
+    // Confessional / alternative spelling mappings
+    if (searchString.includes('köln') || searchString.includes('cologne')) return 'Köln';
+    if (searchString.includes('münchen') || searchString.includes('munich')) return 'München';
+    if (searchString.includes('nürnberg') || searchString.includes('nuremberg')) return 'Nürnberg';
+    if (searchString.includes('wien') || searchString.includes('vienna')) return 'Wien';
+    if (searchString.includes('straßburg') || searchString.includes('strasbourg')) return 'Strasbourg';
+    return null;
+}
 
 // ==========================================================================
 // STARTUP AND INITIALIZATION
@@ -145,6 +175,15 @@ function initTabs() {
             document.getElementById(targetTab).classList.add("active");
             
             state.activeTab = targetTab;
+            
+            // Pause/resume 3D force simulation based on active tab
+            if (state.graph3D) {
+                if (targetTab === 'network-tab') {
+                    state.graph3D.resumeAnimation();
+                } else {
+                    state.graph3D.pauseAnimation();
+                }
+            }
             
             // Handle Leaflet re-size re-draw when switching to Map tab
             if (targetTab === 'map-tab' && state.map) {
@@ -219,31 +258,101 @@ function selectNode(nodeId) {
     if (!node) return;
     
     state.selectedNode = nodeId;
+    state.highlightCity = null; // Clear city selection
     updateInfoPanel(node);
     
-    // Highlight in D3 svg
-    d3.selectAll('.node').classed('selected', n => n.id === nodeId);
+    // Pan map to associated city if it exists
+    const associatedCity = getNodeCity(node);
+    if (associatedCity && cityCoordinates[associatedCity] && state.map) {
+        state.map.setView(cityCoordinates[associatedCity], 7);
+    }
     
-    // Highlight links
-    d3.selectAll('.link')
-      .classed('highlighted', l => l.source.id === nodeId || l.target.id === nodeId)
-      .style('stroke-opacity', l => (l.source.id === nodeId || l.target.id === nodeId) ? 0.9 : 0.08);
-      
-    // Shift focus in network graph if active
-    if (state.activeTab === 'network-tab') {
-        const d3Node = d3.selectAll('.node').filter(n => n.id === nodeId).datum();
-        if (d3Node) {
-            // Zoom/pan to node
-            const transform = d3.zoomIdentity
-                .translate(window.innerWidth / 2 - 200 - d3Node.x, window.innerHeight / 2 - d3Node.y)
-                .scale(1.2);
+    // Draw geographic flow lines on the map if it exists
+    if (state.map) {
+        // Clear previous lines
+        if (state.mapLines) {
+            state.mapLines.forEach(l => state.map.removeLayer(l));
+        }
+        state.mapLines = [];
+        
+        if (associatedCity && cityCoordinates[associatedCity]) {
+            const srcCoords = cityCoordinates[associatedCity];
+            
+            // Find all links connected to the selected node
+            const connectedLinks = state.networkData.links.filter(l => 
+                l.source === nodeId || l.target === nodeId || 
+                (l.source && l.source.id === nodeId) || 
+                (l.target && l.target.id === nodeId)
+            );
+            
+            connectedLinks.forEach(link => {
+                const targetNodeObj = (link.source === nodeId || (link.source && link.source.id === nodeId)) ? link.target : link.source;
+                const targetId = typeof targetNodeObj === 'object' ? targetNodeObj.id : targetNodeObj;
+                const targetNode = state.networkData.nodes.find(n => n.id === targetId);
                 
-            d3.select('#network-svg')
-              .transition()
-              .duration(750)
-              .call(d3.zoom().transform, transform);
+                if (targetNode) {
+                    const destCity = getNodeCity(targetNode);
+                    if (destCity && cityCoordinates[destCity] && destCity !== associatedCity) {
+                        const destCoords = cityCoordinates[destCity];
+                        
+                        // Set style based on connection type
+                        const isCensor = node.type === 'censor';
+                        const lineColor = isCensor ? '#38bdf8' : '#f43f5e'; // sky blue for censors, rose for publishers
+                        
+                        // Draw line
+                        const polyline = L.polyline([srcCoords, destCoords], {
+                            color: lineColor,
+                            weight: 3,
+                            opacity: 0.8,
+                            dashArray: '8, 12',
+                            className: 'flow-polyline' // Class for CSS animation
+                        }).addTo(state.map);
+                        
+                        // Bind tooltip to the line
+                        polyline.bindTooltip(`
+                            <div style="font-family: inherit; font-size:11px;">
+                                <strong>Geographic link:</strong><br/>
+                                ${node.id} (${associatedCity}) &harr; ${targetNode.id} (${destCity})
+                            </div>
+                        `, { sticky: true });
+                        
+                        state.mapLines.push(polyline);
+                    }
+                }
+            });
         }
     }
+    
+    // Highlight in 3D network and trigger update of styles
+    update3DGraphStyles();
+    
+    // Shift focus in network graph if active
+    if (state.activeTab === 'network-tab' && state.graph3D) {
+        // Find the node object in the 3D graph
+        const nodeObj = state.graph3D.graphData().nodes.find(n => n.id === nodeId);
+        if (nodeObj) {
+            // Aim camera at node
+            const distance = 80;
+            const distRatio = 1 + distance / Math.hypot(nodeObj.x, nodeObj.y, nodeObj.z);
+            
+            state.graph3D.cameraPosition(
+                { x: nodeObj.x * distRatio, y: nodeObj.y * distRatio, z: nodeObj.z * distRatio }, // new position
+                nodeObj, // lookAt center
+                1500  // transition ms
+            );
+        }
+    }
+}
+
+// Function to update the style properties of nodes/links based on current selections
+function update3DGraphStyles() {
+    if (!state.graph3D) return;
+    
+    // Trigger recalculation of styles in 3D graph
+    state.graph3D.nodeColor(state.graph3D.nodeColor());
+    state.graph3D.linkWidth(state.graph3D.linkWidth());
+    state.graph3D.linkColor(state.graph3D.linkColor());
+    state.graph3D.linkDirectionalParticles(state.graph3D.linkDirectionalParticles());
 }
 
 // Update Detail side-panel card
@@ -253,6 +362,21 @@ function updateInfoPanel(node) {
     
     placeholder.classList.add('hidden');
     content.classList.remove('hidden');
+    
+    // Hide map actions since we are looking at an actor node
+    document.getElementById('section-map-actions').classList.add('hidden');
+    
+    // Hide city timeline and cover image and clean them up
+    const cityTimelineSection = document.getElementById('section-city-timeline');
+    if (cityTimelineSection) cityTimelineSection.classList.add('hidden');
+    const cityImgSection = document.getElementById('section-city-image');
+    if (cityImgSection) cityImgSection.classList.add('hidden');
+    state.selectedCity = null;
+    state.selectedCityConfession = null;
+    if (state.charts.cityTimeline) {
+        state.charts.cityTimeline.destroy();
+        state.charts.cityTimeline = null;
+    }
     
     document.getElementById('info-name').innerText = node.id;
     
@@ -308,23 +432,39 @@ function updateInfoPanel(node) {
 // Reset all panels
 function resetVisualization() {
     state.selectedNode = null;
+    state.highlightNode = null;
+    state.highlightLinks.clear();
+    state.highlightCity = null;
     document.getElementById('search-input').value = '';
     
     // Hide details panel
     document.getElementById('info-placeholder').classList.remove('hidden');
     document.getElementById('info-content').classList.add('hidden');
+    document.getElementById('section-map-actions').classList.add('hidden');
     
-    // Reset D3 styling
-    d3.selectAll('.node').classed('selected', false);
-    d3.selectAll('.link')
-      .classed('highlighted', false)
-      .style('stroke-opacity', 0.35);
-      
-    // Center D3 network
-    d3.select('#network-svg')
-      .transition()
-      .duration(750)
-      .call(d3.zoom().transform, d3.zoomIdentity.translate(0, 0).scale(1.0));
+    // Hide and clear city timeline chart and cover image
+    const cityTimelineSection = document.getElementById('section-city-timeline');
+    if (cityTimelineSection) cityTimelineSection.classList.add('hidden');
+    const cityImgSection = document.getElementById('section-city-image');
+    if (cityImgSection) cityImgSection.classList.add('hidden');
+    state.selectedCity = null;
+    state.selectedCityConfession = null;
+    if (state.charts.cityTimeline) {
+        state.charts.cityTimeline.destroy();
+        state.charts.cityTimeline = null;
+    }
+    
+    // Clear geographic flow lines
+    if (state.mapLines && state.map) {
+        state.mapLines.forEach(l => state.map.removeLayer(l));
+        state.mapLines = [];
+    }
+    
+    // Reset 3D graph view & styles
+    if (state.graph3D) {
+        update3DGraphStyles();
+        state.graph3D.cameraPosition({ x: 0, y: 0, z: 250 }, { x: 0, y: 0, z: 0 }, 1500);
+    }
 }
 
 // Bind reset and sliders
@@ -358,6 +498,70 @@ function initControls() {
         mapLabel.innerText = `Decade: ${yr}s`;
         updateMapMarkers();
     });
+
+    // Map play button
+    const playBtn = document.getElementById('map-play-btn');
+    if (playBtn) {
+        playBtn.addEventListener('click', toggleMapPlay);
+    }
+    
+    // Map output volume threshold slider
+    const volumeSlider = document.getElementById('map-volume-slider');
+    const volumeLabel = document.getElementById('map-volume-label');
+    if (volumeSlider) {
+        volumeSlider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            volumeLabel.innerText = val === 1 ? '1 title' : `${val} titles`;
+            updateMapMarkers();
+        });
+    }
+    
+    // Confessional checkbox filters
+    const filterCatholic = document.getElementById('filter-catholic');
+    const filterProtestant = document.getElementById('filter-protestant');
+    const filterMixed = document.getElementById('filter-mixed');
+    
+    if (filterCatholic) filterCatholic.addEventListener('change', updateMapMarkers);
+    if (filterProtestant) filterProtestant.addEventListener('change', updateMapMarkers);
+    if (filterMixed) filterMixed.addEventListener('change', updateMapMarkers);
+}
+
+// Animate decade slider advancing
+function toggleMapPlay() {
+    const playBtn = document.getElementById('map-play-btn');
+    const playIcon = document.getElementById('play-icon');
+    const playText = playBtn.querySelector('span');
+    
+    if (state.isPlaying) {
+        // Pause
+        clearInterval(state.playInterval);
+        state.playInterval = null;
+        state.isPlaying = false;
+        playBtn.classList.remove('playing');
+        playText.innerText = 'Play';
+        playIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+    } else {
+        // Play
+        state.isPlaying = true;
+        playBtn.classList.add('playing');
+        playText.innerText = 'Pause';
+        playIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
+        
+        state.playInterval = setInterval(() => {
+            const slider = document.getElementById('map-year-slider');
+            let currentVal = parseInt(slider.value);
+            let nextVal = currentVal + 10;
+            if (nextVal > 1790) {
+                nextVal = 1500; // Loop back
+            }
+            slider.value = nextVal;
+            
+            // Trigger slider input event manually
+            state.activeYear = nextVal;
+            document.getElementById('map-year-label').innerText = `Decade: ${nextVal}s`;
+            updateMapMarkers();
+        }, 1500);
+    }
 }
 
 // ==========================================================================
@@ -368,32 +572,182 @@ function initNetworkGraph() {
     const width = container.clientWidth;
     const height = container.clientHeight;
     
-    // SVG Setup
-    state.svg = d3.select("#network-svg")
-        .attr("viewBox", [0, 0, width, height]);
-        
-    state.gContainer = state.svg.append("g");
-    
-    // Add Pan & Zoom support
-    state.svg.call(d3.zoom()
-        .extent([[0, 0], [width, height]])
-        .scaleExtent([0.15, 6])
-        .on("zoom", ({transform}) => {
-            state.gContainer.attr("transform", transform);
+    // Initialize 3D Force Graph
+    state.graph3D = ForceGraph3D()(container)
+        .width(width)
+        .height(height)
+        .backgroundColor('#0b0f19')
+        .showNavInfo(false)
+        .cooldownTicks(100)
+        .nodeResolution(24)
+        .nodeColor(node => {
+            // Highlight color based on state
+            if (state.highlightCity) {
+                if (getNodeCity(node) === state.highlightCity) {
+                    if (node.type === 'publisher') return "#f43f5e";
+                    return node.is_jesuit ? "#fbbf24" : "#38bdf8";
+                }
+                return 'rgba(30, 41, 59, 0.15)'; // dimmed slate
+            }
+            
+            const activeHighlightNode = state.highlightNode || (state.selectedNode ? state.networkData.nodes.find(n => n.id === state.selectedNode) : null);
+            if (activeHighlightNode) {
+                if (node.id === activeHighlightNode.id) {
+                    if (node.type === 'publisher') return "#f43f5e";
+                    return node.is_jesuit ? "#fbbf24" : "#38bdf8";
+                }
+                
+                const isConnected = state.highlightLinks.size > 0 ? 
+                    Array.from(state.highlightLinks).some(l => {
+                        const sId = typeof l.source === 'object' ? l.source.id : l.source;
+                        const tId = typeof l.target === 'object' ? l.target.id : l.target;
+                        return sId === node.id || tId === node.id;
+                    }) :
+                    state.networkData.links.some(l => {
+                        if (l.weight < state.networkThreshold) return false;
+                        if (state.showJesuitsOnly) {
+                            const sNode = state.networkData.nodes.find(n => n.id === l.source);
+                            const tNode = state.networkData.nodes.find(n => n.id === l.target);
+                            if (!sNode || !tNode) return false;
+                            if (sNode.type === 'censor' && !sNode.is_jesuit) return false;
+                            if (tNode.type === 'censor' && !tNode.is_jesuit) return false;
+                        }
+                        const sId = typeof l.source === 'object' ? l.source.id : l.source;
+                        const tId = typeof l.target === 'object' ? l.target.id : l.target;
+                        return (sId === activeHighlightNode.id && tId === node.id) || (tId === activeHighlightNode.id && sId === node.id);
+                    });
+                
+                if (isConnected) {
+                    if (node.type === 'publisher') return "#f43f5e";
+                    return node.is_jesuit ? "#fbbf24" : "#38bdf8";
+                } else {
+                    return 'rgba(30, 41, 59, 0.15)'; // dimmed slate
+                }
+            }
+            
+            // Default node color
+            if (node.type === 'publisher') return "#f43f5e"; // Rose
+            return node.is_jesuit ? "#fbbf24" : "#38bdf8"; // Gold vs Sky Blue
         })
-    );
-    
+        .nodeVal(node => {
+            // Scale node size by degree
+            return Math.sqrt(node.degree) * 1.5 + 1.2;
+        })
+        .nodeLabel(node => {
+            const nodeCity = getNodeCity(node) || 'Unknown';
+            const nodeType = node.type === 'censor' ? (node.is_jesuit ? 'Jesuit Censor' : 'Censor') : 'Publisher/Printer';
+            return `
+                <div style="background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; color: #fff; font-family: 'Inter', sans-serif; box-shadow: 0 4px 20px rgba(0,0,0,0.45); pointer-events: none;">
+                    <div style="font-weight: 700; font-size:13px; color:#ffffff; margin-bottom:4px;">${node.id}</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-bottom:2px;"><strong style="color:#cbd5e1;">Type:</strong> ${nodeType}</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-bottom:2px;"><strong style="color:#cbd5e1;">City:</strong> ${nodeCity}</div>
+                    <div style="font-size:11px; color:#94a3b8;"><strong style="color:#cbd5e1;">Connections:</strong> ${node.degree} nodes</div>
+                </div>
+            `;
+        })
+        .linkWidth(link => {
+            // Make selected links thicker, rest thinner
+            const activeHighlightNode = state.highlightNode || (state.selectedNode ? state.networkData.nodes.find(n => n.id === state.selectedNode) : null);
+            if (state.highlightCity) {
+                const sCity = getNodeCity(link.source);
+                const tCity = getNodeCity(link.target);
+                const isConnected = (sCity === state.highlightCity || tCity === state.highlightCity);
+                return isConnected ? Math.min(2 + link.weight * 0.5, 6.0) : 0.4;
+            }
+            if (activeHighlightNode) {
+                const sId = typeof link.source === 'object' ? link.source.id : link.source;
+                const tId = typeof link.target === 'object' ? link.target.id : link.target;
+                const isConnected = (sId === activeHighlightNode.id || tId === activeHighlightNode.id);
+                return isConnected ? Math.min(2 + link.weight * 0.5, 6.0) : 0.4;
+            }
+            return Math.min(0.8 + link.weight * 0.3, 3.5);
+        })
+        .linkColor(link => {
+            // Dim unselected links
+            const activeHighlightNode = state.highlightNode || (state.selectedNode ? state.networkData.nodes.find(n => n.id === state.selectedNode) : null);
+            if (state.highlightCity) {
+                const sCity = getNodeCity(link.source);
+                const tCity = getNodeCity(link.target);
+                const isConnected = (sCity === state.highlightCity || tCity === state.highlightCity);
+                if (!isConnected) return 'rgba(51, 65, 85, 0.03)';
+            } else if (activeHighlightNode) {
+                const sId = typeof link.source === 'object' ? link.source.id : link.source;
+                const tId = typeof link.target === 'object' ? link.target.id : link.target;
+                const isConnected = (sId === activeHighlightNode.id || tId === activeHighlightNode.id);
+                if (!isConnected) return 'rgba(51, 65, 85, 0.03)';
+            }
+            
+            const sourceObj = typeof link.source === 'object' ? link.source : state.networkData.nodes.find(n => n.id === link.source);
+            if (sourceObj && sourceObj.type === 'censor') {
+                return sourceObj.is_jesuit ? 'rgba(251, 191, 36, 0.4)' : 'rgba(56, 189, 248, 0.4)';
+            }
+            return 'rgba(255, 255, 255, 0.18)';
+        })
+        .linkDirectionalParticles(link => {
+            // Show moving particles for book flow!
+            const activeHighlightNode = state.highlightNode || (state.selectedNode ? state.networkData.nodes.find(n => n.id === state.selectedNode) : null);
+            if (state.highlightCity) {
+                const sCity = getNodeCity(link.source);
+                const tCity = getNodeCity(link.target);
+                return (sCity === state.highlightCity || tCity === state.highlightCity) ? link.weight : 0;
+            }
+            if (activeHighlightNode) {
+                const sId = typeof link.source === 'object' ? link.source.id : link.source;
+                const tId = typeof link.target === 'object' ? link.target.id : link.target;
+                return (sId === activeHighlightNode.id || tId === activeHighlightNode.id) ? link.weight : 0;
+            }
+            return link.weight;
+        })
+        .linkDirectionalParticleSpeed(link => link.weight * 0.0025 + 0.0015)
+        .linkDirectionalParticleWidth(2.2)
+        .linkDirectionalParticleColor(link => {
+            const sourceObj = typeof link.source === 'object' ? link.source : state.networkData.nodes.find(n => n.id === link.source);
+            if (sourceObj && sourceObj.type === 'censor') {
+                return sourceObj.is_jesuit ? '#fbbf24' : '#38bdf8';
+            }
+            return '#f43f5e';
+        })
+        .onNodeClick(node => {
+            selectNode(node.id);
+        })
+        .onNodeHover(node => {
+            // Update node hover highlight states
+            state.highlightLinks.clear();
+            state.highlightNode = node || null;
+            
+            if (node) {
+                state.networkData.links.forEach(l => {
+                    const sId = typeof l.source === 'object' ? l.source.id : l.source;
+                    const tId = typeof l.target === 'object' ? l.target.id : l.target;
+                    if (sId === node.id || tId === node.id) {
+                        state.highlightLinks.add(l);
+                    }
+                });
+            }
+            
+            update3DGraphStyles();
+        });
+        
+    // Listen for window resize
+    window.addEventListener('resize', () => {
+        if (state.graph3D) {
+            const c = document.getElementById('network-container');
+            state.graph3D.width(c.clientWidth);
+            state.graph3D.height(c.clientHeight);
+        }
+    });
+
     updateNetworkGraph();
 }
 
 function updateNetworkGraph() {
-    if (!state.networkData) return;
+    if (!state.networkData || !state.graph3D) return;
     
     // 1. Filter Links based on threshold
     let links = state.networkData.links.map(l => ({...l}))
         .filter(l => l.weight >= state.networkThreshold);
         
-    // 2. Filter Nodes based on Jesuit filter and degree
+    // 2. Filter Nodes based on Jesuit filter and active links
     let activeNodes = new Set();
     links.forEach(l => {
         activeNodes.add(l.source);
@@ -404,125 +758,13 @@ function updateNetworkGraph() {
         .filter(n => activeNodes.has(n.id));
         
     if (state.showJesuitsOnly) {
-        // Keep publishers OR Jesuit censors
         nodes = nodes.filter(n => n.type === 'publisher' || n.is_jesuit);
-        // Clean orphaned links
         const nodeSet = new Set(nodes.map(n => n.id));
         links = links.filter(l => nodeSet.has(l.source) && nodeSet.has(l.target));
     }
     
-    // Clear old elements
-    state.gContainer.selectAll("*").remove();
-    
-    // Draw links
-    const link = state.gContainer.append("g")
-        .selectAll("line")
-        .data(links)
-        .join("line")
-        .attr("class", "link")
-        .attr("stroke-width", d => Math.min(1 + d.weight * 0.4, 6.0));
-        
-    // Draw nodes
-    const node = state.gContainer.append("g")
-        .selectAll("circle")
-        .data(nodes)
-        .join("circle")
-        .attr("class", "node")
-        .attr("r", d => {
-            if (d.type === 'publisher') return 6 + Math.min(d.degree * 0.4, 16);
-            return d.is_jesuit ? 7 + Math.min(d.degree * 0.5, 14) : 4 + Math.min(d.degree * 0.3, 10);
-        })
-        .attr("fill", d => {
-            if (d.type === 'publisher') return "#f43f5e"; // Rose
-            return d.is_jesuit ? "#fbbf24" : "#38bdf8"; // Gold vs Sky Blue
-        })
-        .attr("stroke", d => d.is_jesuit ? "#ffffff" : "none")
-        .attr("stroke-width", d => d.is_jesuit ? 1.5 : 0)
-        .call(drag(state.simulation))
-        .on("click", (e, d) => {
-            selectNode(d.id);
-            e.stopPropagation();
-        });
-        
-    // Interactive hover triggers
-    node.on("mouseover", (e, d) => {
-        // Highlight active connections
-        link.classed("highlighted", l => l.source.id === d.id || l.target.id === d.id)
-            .style("stroke-opacity", l => (l.source.id === d.id || l.target.id === d.id) ? 0.9 : 0.08);
-    }).on("mouseout", () => {
-        if (state.selectedNode) {
-            // Keep selected node highlighted
-            link.classed("highlighted", l => l.source.id === state.selectedNode || l.target.id === state.selectedNode)
-                .style("stroke-opacity", l => (l.source.id === state.selectedNode || l.target.id === state.selectedNode) ? 0.9 : 0.08);
-        } else {
-            link.classed("highlighted", false).style("stroke-opacity", 0.35);
-        }
-    });
-
-    // Add labels for major hubs
-    const labelThreshold = 8;
-    const labelNodes = nodes.filter(n => n.degree >= labelThreshold);
-    
-    const labels = state.gContainer.append("g")
-        .selectAll("text")
-        .data(labelNodes)
-        .join("text")
-        .attr("class", "node-label")
-        .attr("dx", 10)
-        .attr("dy", 3)
-        .text(d => d.id);
-        
-    // D3 Force Simulation Setup
-    const container = document.getElementById('network-container');
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    
-    state.simulation = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink(links).id(d => d.id).distance(60))
-        .force("charge", d3.forceManyBody().strength(-120))
-        .force("center", d3.forceCenter(width / 2, height / 2))
-        .force("collision", d3.forceCollide().radius(d => 12 + Math.min(d.degree * 0.4, 16)));
-        
-    state.simulation.on("tick", () => {
-        link
-            .attr("x1", d => d.source.x)
-            .attr("y1", d => d.source.y)
-            .attr("x2", d => d.target.x)
-            .attr("y2", d => d.target.y);
-
-        node
-            .attr("cx", d => d.x)
-            .attr("cy", d => d.y);
-            
-        labels
-            .attr("x", d => d.x)
-            .attr("y", d => d.y);
-    });
-}
-
-// Drag & Drop handlers
-function drag(simulation) {
-    function dragstarted(event) {
-        if (!event.active) state.simulation.alphaTarget(0.3).restart();
-        event.subject.fx = event.subject.x;
-        event.subject.fy = event.subject.y;
-    }
-    
-    function dragged(event) {
-        event.subject.fx = event.x;
-        event.subject.fy = event.y;
-    }
-    
-    function dragended(event) {
-        if (!event.active) state.simulation.alphaTarget(0);
-        event.subject.fx = null;
-        event.subject.fy = null;
-    }
-    
-    return d3.drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended);
+    // Feed data to 3D graph (it restarts the force simulation automatically)
+    state.graph3D.graphData({ nodes, links });
 }
 
 // ==========================================================================
@@ -539,28 +781,191 @@ function initMap() {
         maxZoom: 20
     }).addTo(state.map);
     
+    // Adjust circle marker radii dynamically on zoom change
+    state.map.on('zoomend', () => {
+        updateMapMarkers();
+    });
+    
     updateMapMarkers();
+}
+
+// Get color hex code for a city confession
+function getConfessionColor(confession) {
+    if (confession === "Catholic") return "#d4af37"; // Gold
+    if (confession === "Protestant") return "#5b21b6"; // Deep Purple
+    return "#94a3b8"; // Mixed / Gray
+}
+
+// Aggregate city printing count decade-over-decade from 1500 to 1790
+function getCityDecadeCounts(city) {
+    const decades = [];
+    for (let d = 1500; d <= 1790; d += 10) {
+        decades.push(d);
+    }
+    const counts = Array(decades.length).fill(0);
+    
+    if (state.timelineData) {
+        state.timelineData.forEach(row => {
+            const yr = parseInt(row["year"]);
+            if (yr >= 1500 && yr < 1800 && row["city"] === city) {
+                const decadeIndex = Math.floor((yr - 1500) / 10);
+                counts[decadeIndex] += parseInt(row["count"]) || 0;
+            }
+        });
+    }
+    return { decades, counts };
+}
+
+// Render/Update the sidebar line chart for a selected city
+function updateCityTimelineChart(city, activeDecade, confession) {
+    const confessionColor = getConfessionColor(confession);
+    const { decades, counts } = getCityDecadeCounts(city);
+    const activeIndex = decades.indexOf(activeDecade);
+    
+    // Clear and reveal the container
+    const section = document.getElementById('section-city-timeline');
+    if (section) section.classList.remove('hidden');
+    
+    const canvas = document.getElementById('city-timeline-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    // If a chart already exists, destroy it to avoid visual bugs
+    if (state.charts.cityTimeline) {
+        state.charts.cityTimeline.destroy();
+    }
+    
+    // Build dynamic point styles
+    const pointRadii = counts.map((_, idx) => idx === activeIndex ? 6 : 0);
+    const pointBgColors = counts.map((_, idx) => idx === activeIndex ? '#ffffff' : confessionColor);
+    const pointBorderColors = counts.map((_, idx) => idx === activeIndex ? confessionColor : 'transparent');
+    const pointBorderWidths = counts.map((_, idx) => idx === activeIndex ? 3 : 0);
+    
+    // Convert color hex to rgba for the line fill area
+    const fillRgba = confession === "Catholic" ? 'rgba(212, 175, 55, 0.15)' : 
+                     (confession === "Protestant" ? 'rgba(91, 33, 182, 0.15)' : 'rgba(148, 163, 184, 0.15)');
+    
+    state.charts.cityTimeline = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: decades.map(d => `${d}s`),
+            datasets: [{
+                label: 'Publications',
+                data: counts,
+                borderColor: confessionColor,
+                backgroundColor: fillRgba,
+                borderWidth: 2.5,
+                fill: true,
+                tension: 0.25,
+                pointRadius: pointRadii,
+                pointHoverRadius: pointRadii.map(r => r > 0 ? 8 : 4),
+                pointBackgroundColor: pointBgColors,
+                pointBorderColor: pointBorderColors,
+                pointBorderWidth: pointBorderWidths
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.parsed.y} titles`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        color: '#64748b',
+                        font: { family: 'Inter', size: 9 },
+                        maxRotation: 0,
+                        autoSkip: true,
+                        maxTicksLimit: 5
+                    }
+                },
+                y: {
+                    grid: { color: '#1e293b' },
+                    ticks: {
+                        color: '#64748b',
+                        font: { family: 'Inter', size: 9 },
+                        maxTicksLimit: 3
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Synchronize chart highlight indicator on timeline dragging
+function updateCityChartHighlight(activeDecade) {
+    if (!state.charts.cityTimeline || !state.selectedCity) return;
+    
+    const chart = state.charts.cityTimeline;
+    const decades = [];
+    for (let d = 1500; d <= 1790; d += 10) {
+        decades.push(d);
+    }
+    const activeIndex = decades.indexOf(activeDecade);
+    const confessionColor = getConfessionColor(state.selectedCityConfession);
+    
+    const dataset = chart.data.datasets[0];
+    dataset.pointRadius = dataset.data.map((_, idx) => idx === activeIndex ? 6 : 0);
+    dataset.pointHoverRadius = dataset.data.map((_, idx) => idx === activeIndex ? 8 : 4);
+    dataset.pointBackgroundColor = dataset.data.map((_, idx) => idx === activeIndex ? '#ffffff' : confessionColor);
+    dataset.pointBorderColor = dataset.data.map((_, idx) => idx === activeIndex ? confessionColor : 'transparent');
+    dataset.pointBorderWidth = dataset.data.map((_, idx) => idx === activeIndex ? 3 : 0);
+    
+    chart.update('none'); // Instantaneous update without animation
 }
 
 function updateMapMarkers() {
     if (!state.timelineData || !state.map) return;
     
-    // Clear old markers
-    state.mapMarkers.forEach(m => state.map.removeLayer(m));
-    state.mapMarkers = [];
-    
     const targetDecade = state.activeYear;
     
-    // Aggregate printing volume by city for the active decade (e.g. 1610 to 1619)
+    // Synchronize active selection timeline chart highlight if visible
+    updateCityChartHighlight(targetDecade);
+    
+    // Clear old markers and lines
+    state.mapMarkers.forEach(m => state.map.removeLayer(m));
+    state.mapMarkers = [];
+    if (state.mapLines) {
+        state.mapLines.forEach(l => state.map.removeLayer(l));
+        state.mapLines = [];
+    }
+    
+    const previousDecade = targetDecade - 10;
+    
+    // Confessional filters state
+    const showCatholic = document.getElementById('filter-catholic')?.checked !== false;
+    const showProtestant = document.getElementById('filter-protestant')?.checked !== false;
+    const showMixed = document.getElementById('filter-mixed')?.checked !== false;
+    
+    // Min printing output volume threshold filter state
+    const minVolume = parseInt(document.getElementById('map-volume-slider')?.value || 1);
+    
+    // Aggregate printing volume by city for the active decade and previous decade
     const cityTotals = {};
+    const prevCityTotals = {};
     
     state.timelineData.forEach(row => {
         const yr = parseInt(row["year"]);
+        const city = row["city"];
+        const count = parseInt(row["count"]) || 0;
+        const confession = row["confession"];
+        
+        // Apply confession filters
+        if (confession === "Catholic" && !showCatholic) return;
+        if (confession === "Protestant" && !showProtestant) return;
+        if (confession === "Mixed" && !showMixed) return;
+        
+        // Active decade
         if (yr >= targetDecade && yr < targetDecade + 10) {
-            const city = row["city"];
-            const count = parseInt(row["count"]) || 0;
-            const confession = row["confession"];
-            
             if (!cityTotals[city]) {
                 cityTotals[city] = {
                     count: 0,
@@ -569,27 +974,109 @@ function updateMapMarkers() {
             }
             cityTotals[city].count += count;
         }
+        // Previous decade
+        else if (previousDecade >= 1500 && yr >= previousDecade && yr < previousDecade + 10) {
+            if (!prevCityTotals[city]) {
+                prevCityTotals[city] = {
+                    count: 0
+                };
+            }
+            prevCityTotals[city].count += count;
+        }
     });
     
     // Render markers on map
     for (const [city, data] of Object.entries(cityTotals)) {
         const coords = cityCoordinates[city];
-        if (!coords || data.count === 0) continue;
+        if (!coords || data.count < minVolume) continue;
         
-        // Scale size by square root of count
-        const radius = Math.sqrt(data.count) * 2.2 + 3;
+        // Scale with power-law (exponent 0.35) for a balanced sizing dynamic, then scale by zoom
+        const currentZoom = state.map.getZoom();
+        const zoomFactor = Math.pow(1.5, currentZoom - 6);
+        let radius = (Math.pow(data.count, 0.35) * 1.1 + 1.2) * zoomFactor;
+        const maxCap = Math.max(8, currentZoom * 4.5);
+        radius = Math.max(2.5, Math.min(maxCap, radius));
+        
+        // Calculate previous decade radius for comparison
+        let prevRadius = 0;
+        const prevData = prevCityTotals[city];
+        if (prevData && prevData.count >= minVolume) {
+            prevRadius = (Math.pow(prevData.count, 0.35) * 1.1 + 1.2) * zoomFactor;
+            prevRadius = Math.max(2.5, Math.min(maxCap, prevRadius));
+        }
+        
+        // Determine growth/decline characteristics
+        const isComparisonAvailable = prevRadius > 0;
+        const isSignificantChange = isComparisonAvailable && Math.abs(radius - prevRadius) > 0.5;
+        const isGrowth = isSignificantChange && radius > prevRadius;
+        const isDecline = isSignificantChange && prevRadius > radius;
+        
+        // 1. Draw glowing comparison outline of the previous decade FIRST (sits behind the solid marker)
+        if (isSignificantChange) {
+            const prevIconSize = prevRadius * 2.2;
+            const prevDivIcon = L.divIcon({
+                html: `<div class="prev-decade-ring ${isGrowth ? 'prev-ring-growth' : 'prev-ring-decline'}" 
+                            style="width:${prevIconSize}px; height:${prevIconSize}px;"></div>`,
+                className: 'custom-prev-ring',
+                iconSize: [prevIconSize, prevIconSize],
+                iconAnchor: [prevIconSize / 2, prevIconSize / 2]
+            });
+            
+            const prevMarker = L.marker(coords, {
+                icon: prevDivIcon,
+                zIndexOffset: -100, // Render behind the main city markers
+                interactive: false // Click events pass through to the main marker
+            }).addTo(state.map);
+            state.mapMarkers.push(prevMarker);
+        }
+        
+        // 2. Determine styling parameters for the active main city marker
+        let borderStrokeColor = "#ffffff";
+        let strokeWeight = 1.0;
+        let glowClass = "glow-neutral";
+        
+        if (isSignificantChange) {
+            if (isGrowth) {
+                borderStrokeColor = "#10b981"; // Emerald green
+                strokeWeight = 2.0;
+                glowClass = "glow-growth";
+            } else if (isDecline) {
+                borderStrokeColor = "#ef4444"; // Crimson red
+                strokeWeight = 2.0;
+                glowClass = "glow-decline";
+            }
+        }
+        
+        let markerClasses = [glowClass];
+        if (data.count > 500) {
+            markerClasses.push('pulse-marker');
+        }
         
         let color = "#94a3b8"; // Mixed / Gray
         if (data.confession === "Catholic") color = "#d4af37"; // Gold
         else if (data.confession === "Protestant") color = "#5b21b6"; // Deep Purple
         
-        const marker = L.circleMarker(coords, {
-            radius: radius,
-            fillColor: color,
-            color: "#ffffff",
-            weight: 1.0,
-            opacity: 0.8,
-            fillOpacity: 0.75
+        // Create custom Leaflet divIcon using the Asset Agent's marker images
+        let markerImg = "assets/markers/mixed_marker.jpg";
+        if (data.confession === "Catholic") markerImg = "assets/markers/catholic_marker.jpg";
+        else if (data.confession === "Protestant") markerImg = "assets/markers/protestant_marker.jpg";
+        
+        const iconSize = radius * 2.2;
+        
+        const divIcon = L.divIcon({
+            html: `<div class="custom-map-marker-wrapper ${markerClasses.join(' ')}" style="width:${iconSize}px; height:${iconSize}px;">
+                     <div class="marker-image-wrapper" style="width:100%; height:100%;">
+                         <img src="${markerImg}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                     </div>
+                   </div>`,
+            className: 'custom-map-marker',
+            iconSize: [iconSize, iconSize],
+            iconAnchor: [iconSize / 2, iconSize / 2]
+        });
+        
+        // Create the active main city marker
+        const marker = L.marker(coords, {
+            icon: divIcon
         }).addTo(state.map);
         
         // Rich tooltip detail
@@ -603,6 +1090,29 @@ function updateMapMarkers() {
         
         // Sidebar metadata bind on click
         marker.on('click', () => {
+            state.selectedCity = city;
+            state.selectedCityConfession = data.confession;
+            updateCityTimelineChart(city, targetDecade, data.confession);
+            
+            // Dynamically show city woodcut image in sidebar if it exists
+            const cityAssetMap = {
+                "Leipzig": "leipzig",
+                "Frankfurt am Main": "frankfurt",
+                "Köln": "cologne",
+                "München": "munich",
+                "Wien": "vienna"
+            };
+            const assetName = cityAssetMap[city];
+            const cityImgSection = document.getElementById('section-city-image');
+            const cityImg = document.getElementById('sidebar-city-image');
+            
+            if (assetName && cityImg && cityImgSection) {
+                cityImg.src = `assets/hubs/city_${assetName}.jpg`;
+                cityImgSection.classList.remove('hidden');
+            } else if (cityImgSection) {
+                cityImgSection.classList.add('hidden');
+            }
+            
             const sidePanel = document.getElementById('info-content');
             const placeholder = document.getElementById('info-placeholder');
             
@@ -610,6 +1120,68 @@ function updateMapMarkers() {
             sidePanel.classList.remove('hidden');
             
             document.getElementById('info-name').innerText = city;
+            
+            // Draw geographic flow lines for this city
+            if (state.mapLines) {
+                state.mapLines.forEach(l => state.map.removeLayer(l));
+            }
+            state.mapLines = [];
+            
+            if (state.networkData) {
+                // Find all nodes (actors) associated with this city
+                const cityNodes = state.networkData.nodes.filter(n => getNodeCity(n) === city);
+                const cityNodeIds = new Set(cityNodes.map(n => n.id));
+                const drawnDestinations = new Set();
+                
+                // Find all links connected to any actor in this city
+                const connectedLinks = state.networkData.links.filter(l => {
+                    const sId = typeof l.source === 'object' ? l.source.id : l.source;
+                    const tId = typeof l.target === 'object' ? l.target.id : l.target;
+                    return cityNodeIds.has(sId) || cityNodeIds.has(tId);
+                });
+                
+                connectedLinks.forEach(link => {
+                    const sId = typeof link.source === 'object' ? link.source.id : link.source;
+                    const tId = typeof link.target === 'object' ? link.target.id : link.target;
+                    
+                    const isSourceInCity = cityNodeIds.has(sId);
+                    const otherNodeId = isSourceInCity ? tId : sId;
+                    const otherNode = state.networkData.nodes.find(n => n.id === otherNodeId);
+                    
+                    if (otherNode) {
+                        const destCity = getNodeCity(otherNode);
+                        if (destCity && cityCoordinates[destCity] && destCity !== city) {
+                            if (drawnDestinations.has(destCity)) return; // Avoid duplicate lines
+                            drawnDestinations.add(destCity);
+                            
+                            const destCoords = cityCoordinates[destCity];
+                            
+                            // Set style based on city confession
+                            const lineColor = data.confession === "Catholic" ? '#38bdf8' : 
+                                              (data.confession === "Protestant" ? '#5b21b6' : '#cbd5e1');
+                            
+                            // Draw flow polyline
+                            const polyline = L.polyline([coords, destCoords], {
+                                color: lineColor,
+                                weight: 3.5,
+                                opacity: 0.75,
+                                dashArray: '8, 12',
+                                className: 'flow-polyline'
+                            }).addTo(state.map);
+                            
+                            // Tooltip showing connection
+                            polyline.bindTooltip(`
+                                <div style="font-family: inherit; font-size:11px;">
+                                    <strong>Geographic Channel:</strong><br/>
+                                    ${city} &harr; ${destCity}
+                                </div>
+                            `, { sticky: true });
+                            
+                            state.mapLines.push(polyline);
+                        }
+                    }
+                });
+            }
             
             const typeTag = document.getElementById('info-tag-type');
             typeTag.innerText = 'Printing Center';
@@ -623,15 +1195,83 @@ function updateMapMarkers() {
             const bioText = document.getElementById('info-biography');
             document.getElementById('section-biography').classList.remove('hidden');
             
+            // Reconstruct text to dynamically show active and previous decade comparison in sidebar
+            let comparisonText = "";
+            if (prevData && prevData.count > 0) {
+                const diff = data.count - prevData.count;
+                const percent = ((diff / prevData.count) * 100).toFixed(1);
+                const verb = diff >= 0 ? "increased" : "decreased";
+                const changeColor = diff >= 0 ? "#10b981" : "#ef4444";
+                const sign = diff >= 0 ? "+" : "";
+                comparisonText = ` This represents a <strong style="color: ${changeColor};">${sign}${percent}%</strong> output change (${verb} by ${Math.abs(diff)} titles) compared to the previous decade (${previousDecade}s: ${prevData.count} titles).`;
+            }
+            
             bioText.innerHTML = `
                 Historically classified as a <strong>${data.confession}</strong> printing hub.<br/><br/>
-                During the <strong>${targetDecade}s</strong>, publishers in ${city} released a total of <strong>${data.count}</strong> cataloged titles in our database.
+                During the <strong>${targetDecade}s</strong>, publishers in ${city} released a total of <strong>${data.count}</strong> cataloged titles in our database.${comparisonText}
             `;
             
             document.getElementById('info-degree').innerText = 'N/A';
+            
+            // Show map actions panel for highlighting network actors
+            const mapActions = document.getElementById('section-map-actions');
+            mapActions.classList.remove('hidden');
+            
+            const highlightBtn = document.getElementById('btn-highlight-city-actors');
+            // Remove previous event listeners by cloning
+            const newHighlightBtn = highlightBtn.cloneNode(true);
+            highlightBtn.parentNode.replaceChild(newHighlightBtn, highlightBtn);
+            
+            newHighlightBtn.innerText = `Highlight ${city} Actors in Network`;
+            newHighlightBtn.addEventListener('click', () => {
+                // 1. Switch to network tab
+                const netTabBtn = document.querySelector('[data-tab="network-tab"]');
+                if (netTabBtn) netTabBtn.click();
+                
+                // 2. Clear current search input
+                document.getElementById('search-input').value = '';
+                state.searchQuery = '';
+                
+                // 3. Highlight 3D nodes matching this city
+                state.selectedNode = null;
+                state.highlightNode = null;
+                state.highlightLinks.clear();
+                state.highlightCity = city;
+                
+                update3DGraphStyles();
+                
+                if (state.graph3D) {
+                    state.graph3D.cameraPosition({ x: 0, y: 0, z: 250 }, { x: 0, y: 0, z: 0 }, 1200);
+                }
+            });
         });
         
         state.mapMarkers.push(marker);
+    }
+
+    // If a city is currently selected, dynamically update its sidebar text for the new active decade
+    if (state.selectedCity) {
+        const city = state.selectedCity;
+        const data = cityTotals[city] || { count: 0, confession: state.selectedCityConfession };
+        const prevData = prevCityTotals[city];
+        
+        const bioText = document.getElementById('info-biography');
+        if (bioText) {
+            let comparisonText = "";
+            if (prevData && prevData.count > 0) {
+                const diff = data.count - prevData.count;
+                const percent = prevData.count > 0 ? ((diff / prevData.count) * 100).toFixed(1) : "0.0";
+                const verb = diff >= 0 ? "increased" : "decreased";
+                const changeColor = diff >= 0 ? "#10b981" : "#ef4444";
+                const sign = diff >= 0 ? "+" : "";
+                comparisonText = ` This represents a <strong style="color: ${changeColor};">${sign}${percent}%</strong> output change (${verb} by ${Math.abs(diff)} titles) compared to the previous decade (${previousDecade}s: ${prevData.count} titles).`;
+            }
+            
+            bioText.innerHTML = `
+                Historically classified as a <strong>${data.confession}</strong> printing hub.<br/><br/>
+                During the <strong>${targetDecade}s</strong>, publishers in ${city} released a total of <strong>${data.count}</strong> cataloged titles in our database.${comparisonText}
+            `;
+        }
     }
 }
 
