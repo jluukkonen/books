@@ -695,9 +695,10 @@ function updateMapMarkers() {
         
         // Scale size dynamically based on map zoom level to prevent massive circles on zoom out
         const currentZoom = state.map.getZoom();
-        const zoomFactor = Math.pow(1.35, currentZoom - 6);
-        let radius = (Math.sqrt(data.count) * 1.8 + 2.5) * zoomFactor;
-        radius = Math.max(3, Math.min(50, radius));
+        const zoomFactor = Math.pow(1.4, currentZoom - 6);
+        let radius = (Math.sqrt(data.count) * 0.75 + 2.0) * zoomFactor;
+        const maxCap = Math.max(12, currentZoom * 4.5);
+        radius = Math.max(3, Math.min(maxCap, radius));
         
         let color = "#94a3b8"; // Mixed / Gray
         if (data.confession === "Catholic") color = "#d4af37"; // Gold
