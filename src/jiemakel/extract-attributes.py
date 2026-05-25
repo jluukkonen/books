@@ -10,8 +10,6 @@ add_to_sys_path(here())
 from src.common_basis_gizmosql import *
 #from src.common_basis_quack import *
 
-subqueries: list[nw.LazyFrame] = []
-
 def gather_subfields(lnf: nw.LazyFrame[GizmoSQLDataFrame]) -> nw.LazyFrame[GizmoSQLDataFrame]:
     return to_narwhals(
         to_gizmosql(lnf)
@@ -46,7 +44,6 @@ def extract_title(dataset: str, standard: str):
         return
     persist_as_s3_parquet("all_titles", dataset, q.select(c('record_number'), c('value').alias('main_title')))
 
-subqueries.clear()
 iter_catalogues(extract_title)
 register_s3_parquets_as_view("all_titles")
 
@@ -85,10 +82,7 @@ def extract_country_of_publication(dataset: str, standard: str):
                         .filter(c('value')!='')
                         .select(c('record_number'), c('value').alias('country_of_publication')))
     
-subqueries.clear()
 iter_catalogues(extract_country_of_publication)
-
-
 register_s3_parquets_as_view("all_countries_of_publication")
 
 #to_parquet("p_country_of_publication", nw.concat(subqueries).sort('e_id'))
@@ -129,10 +123,8 @@ def extract_year_of_publication(dataset: str, standard: str):
                         .filter(c('value').str.contains(r'^\d{4}$'))
                         .select(c('record_number'), c('value').alias('year_of_publication').cast(nw.Int32)))
     
-subqueries.clear()
 iter_catalogues(extract_year_of_publication)
 register_s3_parquets_as_view("all_years_of_publication")
-#persist_as_s3_parquet("all_years_of_publication", nw.concat(subqueries))
 
 #%%
 def extract_primary_language(dataset: str, standard: str):
@@ -167,8 +159,8 @@ def extract_primary_language(dataset: str, standard: str):
                         .filter(c('value')!='', c('value')!='und')
                         .select(c('record_number'), c('value').alias('primary_language_code')))
     
-subqueries.clear()
 iter_catalogues(extract_primary_language)
+register_s3_parquets_as_view("all_primary_languages")
 
 # %%
 
@@ -198,8 +190,8 @@ def extract_cataloguing_date(dataset: str, standard: str):
         return
     persist_as_s3_parquet("all_cataloguing_dates", dataset, q.select(c("record_number"), c("date_created"), c("date_created_raw")))
     
-subqueries.clear()
 iter_catalogues(extract_cataloguing_date)
+register_s3_parquets_as_view("all_cataloguing_dates")
 
 # %%
 
@@ -231,9 +223,8 @@ def extract_last_modification_datetime(dataset: str, standard: str):
         return
     persist_as_s3_parquet("all_last_modification_datetimes", dataset, q.select(c("record_number"), c("last_modification_datetime"), c("last_modification_datetime_raw")))
 
-subqueries.clear()
 iter_catalogues(extract_last_modification_datetime)
-
+register_s3_parquets_as_view("all_last_modification_datetimes")
 
 #%%
 
@@ -257,7 +248,6 @@ def extract_place_of_publication(dataset: str, standard: str):
         return
     persist_as_s3_parquet("all_places_of_publication", dataset, q.select(c("record_number"), c("value").alias("place_of_publication"), c("place_type")))
 
-subqueries.clear()
 iter_catalogues(extract_place_of_publication)
 register_s3_parquets_as_view("all_places_of_publication")
 
@@ -275,7 +265,6 @@ def extract_place_of_publication_id(dataset: str, standard: str):
         return
     persist_as_s3_parquet("all_place_of_publication_ids", dataset, q.select(c("record_number"), c("value").alias("place_of_publication_id")))
 
-subqueries.clear()
 iter_catalogues(extract_place_of_publication_id)
 register_s3_parquets_as_view("all_place_of_publication_ids")
 #%%
@@ -297,7 +286,6 @@ def extract_publishers(dataset: str, standard: str):
         return
     persist_as_s3_parquet("all_publishers", dataset, q.select(c("record_number"), c("value").alias("publisher")))
 
-subqueries.clear()
 iter_catalogues(extract_publishers)
 register_s3_parquets_as_view("all_publishers")
 # %%
@@ -320,7 +308,6 @@ def extract_individual_actors(dataset: str, standard: str):
         return
     persist_as_s3_parquet("all_individual_actors", dataset, q.select(c("record_number"), c("field_number"), c("field_code"), c("value")))
     
-subqueries.clear()
 iter_catalogues(extract_individual_actors)
 register_s3_parquets_as_view("all_individual_actors")
 # %%
@@ -339,7 +326,6 @@ def extract_corporate_actors(dataset: str, standard: str):
         return
     persist_as_s3_parquet("all_corporate_actors", dataset, q.select(c("record_number"), c("field_number"), c("field_code"), c("value")))
     
-subqueries.clear()
 iter_catalogues(extract_corporate_actors)
 register_s3_parquets_as_view("all_corporate_actors")
 # %%
@@ -353,12 +339,24 @@ def extract_meeting_names(dataset: str, standard: str):
         return
     persist_as_s3_parquet("all_meeting_names", dataset, q.select(c("record_number"), c("field_number"), c("field_code"), c("value")))
     
-subqueries.clear()
 iter_catalogues(extract_meeting_names)
 register_s3_parquets_as_view("all_meeting_names")
 # %%
-p(to_narwhals(to_gizmosql(f('vd17').filter(c('field_code')=='028A', c('record_number')==20))
- .sort(F.col('subfield_number'))
- .agg(F.concat(F.col('subfield_code'), F.lit('$'),F.col('value')))
-))
+def extract_genre_terms(dataset: str, standard: str):
+    if standard == 'pica':
+        q = (
+                f(dataset).filter(c('field_code')=='044S', c('subfield_code')=='a')
+            )
+    if standard == 'marc21':
+        q = (
+            f(dataset).filter(c('field_code').is_in(['655']), c('subfield_code')=='a')
+        )
+    else:
+        print(f"Skipping genre term extraction for dataset {dataset} with standard {standard}")
+        return
+    persist_as_s3_parquet("all_genre_terms", dataset, q.select(c("record_number"), c("value").alias("genre_term")))
+
+iter_catalogues(extract_genre_terms)
+register_s3_parquets_as_view("all_genre_terms")
+
 # %%

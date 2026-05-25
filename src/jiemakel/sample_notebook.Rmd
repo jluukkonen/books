@@ -31,7 +31,88 @@ box::use(src/common_basis)
 rlang::env_coalesce(box::topenv(), common_basis)
 library(tidyverse)
 library(gghsci)
+library(googlesheets4)
 ```
+```{r}
+place_name_mapping <- all_places_of_publication |>
+  filter(source %in% c("vd16","vd17","vd18")) |> 
+  filter(place_type=="standardized") |>
+  inner_join(all_places_of_publication |>
+              filter(source %in% c("vd16","vd17","vd18")) |> 
+              filter(place_type=="unstandardized"),
+    join_by(source, record_number)
+  ) |>
+  count(standard_place_of_publication=place_of_publication.x, place_of_publication=place_of_publication.y) |>
+  group_by(place_of_publication) |>
+  filter(n==max(n)) |>
+  ungroup() |>
+  select(-n) |>
+  collect()
+
+place_name_mapping <- place_name_mapping |>
+  union_all(all_places_of_publication |>
+              filter(source %in% c("vd16","vd17","vd18")) |> 
+              filter(place_type=="standardized") |>
+              collect() |>
+              anti_join(place_name_mapping, join_by(place_of_publication)) |>
+              distinct(standard_place_of_publication=place_of_publication, place_of_publication)
+  )
+
+place_name_mapping |> 
+  filter(place_of_publication!=standard_place_of_publication) |> 
+  inner_join(all_places_of_publication |>                                                            
+               filter(source %in% c("vd16","vd17","vd18")) |> 
+               filter(place_type=="unstandardized") |> 
+               count(place_of_publication) |> 
+               collect()) |> 
+  arrange(desc(n)) |>
+  write_sheet(ss="1kv7RLk62bUJCb-je94ajlEsIsoIBXweZChLBnAIxF-E", sheet="unstandardized_place_name_mapping")
+```
+
+
+```{r}
+place_name_mapping <- read_sheet(ss="1kv7RLk62bUJCb-je94ajlEsIsoIBXweZChLBnAIxF-E", sheet="unstandardized_place_name_mapping") |>
+  filter(is.na(bad_link)) |>
+  select(standard_place_of_publication, place_of_publication)
+
+all_places_of_publication |>
+  filter(source %in% c("vd16","vd17","vd18")) |> 
+  filter(place_type=="standardized") |>
+  collect() |>
+  union_all(
+    all_places_of_publication |>
+      filter(source %in% c("vd16","vd17","vd18")) |> 
+      filter(place_type=="unstandardized") |>
+      anti_join(
+        all_places_of_publication |>
+              filter(source %in% c("vd16","vd17","vd18")) |> 
+              filter(place_type=="standardized"),
+        join_by(source, record_number)
+      ) |>
+      collect() |>
+      left_join(place_name_mapping, join_by(place_of_publication)) |>
+      mutate(place_type=if_else(is.na(standard_place_of_publication),"unstandardized","standardized"), place_of_publication=coalesce(standard_place_of_publication, place_of_publication)) |>
+      select(-standard_place_of_publication)
+  ) |>
+  count(place_type, source, place_of_publication, name = "n_publications") |>
+  group_by(source) |>
+  mutate(proportion_of_publications=n_publications/sum(n_publications)) |>
+  ungroup() |>
+  pivot_wider(id_cols=c(place_type, place_of_publication), names_from=source, values_from=c(n_publications,proportion_of_publications)) |>
+  mutate(n_publications=n_publications_vd16+n_publications_vd17+n_publications_vd18) |>
+  arrange(desc(n_publications)) |>
+  mutate(notes=NA_character_) |>
+  write_sheet(ss="1kv7RLk62bUJCb-je94ajlEsIsoIBXweZChLBnAIxF-E", sheet="data")
+```
+
+
+```{r}
+d |> 
+  write_sheet(ss="1kv7RLk62bUJCb-je94ajlEsIsoIBXweZChLBnAIxF-E")
+```
+
+
+
 ```{r}
 p_year_of_publication |>
   filter(year_of_publication>=1400, year_of_publication<=2030) |>

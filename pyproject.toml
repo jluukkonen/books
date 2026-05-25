@@ -9,6 +9,7 @@ dependencies = [
     "boto3>=1.43.11",
     "duckdb>=1.5.2",
     "folium>=0.20.0",
+    "gspread>=6.2.1",
     "hereutil>=0.1.5",
     "narwhals>=2.21.0",
     "pandas>=3.0.3",
