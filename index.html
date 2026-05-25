@@ -55,9 +55,12 @@
                 </div>
                 
                 <!-- Jesuit Only toggle -->
-                <div class="control-group checkbox-group">
-                    <input type="checkbox" id="jesuit-checkbox">
-                    <label for="jesuit-checkbox">Show Jesuit Censors Only</label>
+                <div class="control-group checkbox-group switch-group">
+                    <span class="control-label-text">Show Jesuit Censors Only</span>
+                    <label class="switch-toggle">
+                        <input type="checkbox" id="jesuit-checkbox">
+                        <span class="switch-slider"></span>
+                    </label>
                 </div>
                 
                 <!-- Reset Button -->
@@ -85,34 +88,52 @@
                     </div>
                     
                     <div class="info-section" id="section-gnd">
-                        <h4>GND Authority link</h4>
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                            <span>GND Authority Link</span>
+                        </h4>
                         <a href="#" id="info-gnd-link" target="_blank" class="gnd-link">GND ID</a>
                     </div>
                     
                     <div class="info-section" id="section-occupations">
-                        <h4>Occupations / Background</h4>
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                            <span>Occupations & Background</span>
+                        </h4>
                         <p id="info-occupations">Professor of theology, Jesuit priest.</p>
                     </div>
                     
                     <div class="info-section" id="section-biography">
-                        <h4>Biographical Notes</h4>
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                            <span>Biographical Notes</span>
+                        </h4>
                         <p id="info-biography">Born 1572 in Munich, taught at Ingolstadt, died 1632.</p>
                     </div>
                     
                     <div class="info-section hidden" id="section-city-timeline">
-                        <h4>300-Year Output Trend</h4>
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                            <span>300-Year Output Trend</span>
+                        </h4>
                         <div class="city-chart-wrapper">
                             <canvas id="city-timeline-chart"></canvas>
                         </div>
                     </div>
                     
                     <div class="info-section" id="section-stats">
-                        <h4>Degree Centrality</h4>
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                            <span>Degree Centrality</span>
+                        </h4>
                         <p>This actor is connected to <strong id="info-degree">12</strong> other nodes in the active graph.</p>
                     </div>
                     
                     <div class="info-section hidden" id="section-map-actions">
-                        <h4>Map Actions</h4>
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                            <span>Map Actions</span>
+                        </h4>
                         <button id="btn-highlight-city-actors" class="btn btn-secondary">Highlight City Actors in Network</button>
                     </div>
                 </div>
@@ -187,18 +208,27 @@
                         <div class="map-legend">
                             <span class="legend-title">Confession Filters</span>
                             <div class="legend-filters">
-                                <label class="filter-label">
-                                    <input type="checkbox" id="filter-catholic" checked>
-                                    <span class="legend-dot color-catholic-hub"></span>Catholic
-                                </label>
-                                <label class="filter-label">
-                                    <input type="checkbox" id="filter-protestant" checked>
-                                    <span class="legend-dot color-protestant-hub"></span>Protestant
-                                </label>
-                                <label class="filter-label">
-                                    <input type="checkbox" id="filter-mixed" checked>
-                                    <span class="legend-dot color-mixed-hub"></span>Mixed
-                                </label>
+                                <div class="filter-switch-item">
+                                    <label class="switch-toggle mini-switch">
+                                        <input type="checkbox" id="filter-catholic" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                    <span class="filter-label-text"><span class="legend-dot color-catholic-hub"></span>Catholic</span>
+                                </div>
+                                <div class="filter-switch-item">
+                                    <label class="switch-toggle mini-switch">
+                                        <input type="checkbox" id="filter-protestant" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                    <span class="filter-label-text"><span class="legend-dot color-protestant-hub"></span>Protestant</span>
+                                </div>
+                                <div class="filter-switch-item">
+                                    <label class="switch-toggle mini-switch">
+                                        <input type="checkbox" id="filter-mixed" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                    <span class="filter-label-text"><span class="legend-dot color-mixed-hub"></span>Mixed</span>
+                                </div>
                             </div>
                         </div>
                     </div>
