@@ -14,12 +14,14 @@ const state = {
     // Raw Datasets
     networkData: null,
     timelineData: null,
+    censorTimelines: null,
     
     // Network Graph variables
     svg: null,
     gContainer: null,
     simulation: null,
     highlightCity: null,
+    zoom: null,
     
     // Leaflet variables
     map: null,
@@ -31,7 +33,8 @@ const state = {
         leipzigFrankfurt: null,
         confessional: null,
         language: null,
-        cityTimeline: null
+        cityTimeline: null,
+        actorTimeline: null
     },
     selectedCity: null,
     selectedCityConfession: null
@@ -130,6 +133,9 @@ async function loadData() {
         const timelineResponse = await fetch('data/timeline.csv');
         const csvText = await timelineResponse.text();
         state.timelineData = parseCSV(csvText);
+        
+        const timelinesResponse = await fetch('data/censor_timelines.json');
+        state.censorTimelines = await timelinesResponse.json();
         
         // Hide loading spinner and init viz
         document.getElementById('network-loading').classList.add('hidden');
@@ -260,6 +266,7 @@ function selectNode(nodeId) {
     state.selectedNode = nodeId;
     state.highlightCity = null; // Clear city selection
     updateInfoPanel(node);
+    zoomToNode(nodeId);
     
     // Pan map to associated city if it exists
     const associatedCity = getNodeCity(node);
@@ -385,6 +392,113 @@ function updateNetworkHighlights() {
         });
 }
 
+// Programmatically switch tabs
+function switchTab(tabId) {
+    const btn = document.querySelector(`.tab-button[data-tab="${tabId}"]`);
+    if (btn) btn.click();
+}
+
+// Camera Spotlight (Pan & Zoom-to-Node)
+function zoomToNode(nodeId) {
+    if (state.activeTab !== 'network-tab') {
+        switchTab('network-tab');
+    }
+    
+    // Brief timeout to let the DOM tab switch render and simulation wake up
+    setTimeout(() => {
+        const nodeObj = state.simulation ? state.simulation.nodes().find(n => n.id === nodeId) : null;
+        if (nodeObj && state.svg && state.zoom) {
+            const container = document.getElementById('network-container');
+            if (!container) return;
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            const transform = d3.zoomIdentity
+                .translate(width / 2, height / 2)
+                .scale(1.8)
+                .translate(-nodeObj.x, -nodeObj.y);
+                
+            state.svg.transition()
+                .duration(750)
+                .call(state.zoom.transform, transform);
+        }
+    }, state.activeTab !== 'network-tab' ? 200 : 0);
+}
+
+// Render dynamic Chart.js actor timeline in dynamic sidebar card
+function renderActorTimelineChart(actorId, type) {
+    const canvas = document.getElementById('actor-timeline-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    // Destroy previous instance to avoid visual overlapping
+    if (state.charts.actorTimeline) {
+        state.charts.actorTimeline.destroy();
+    }
+    
+    const counts = state.censorTimelines ? (state.censorTimelines[actorId] || Array(30).fill(0)) : Array(30).fill(0);
+    const decades = [];
+    for (let d = 1500; d <= 1790; d += 10) {
+        decades.push(`${d}s`);
+    }
+    
+    const themeColor = type === 'censor' ? '#38bdf8' : '#f43f5e';
+    const fillRgba = type === 'censor' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(244, 63, 94, 0.15)';
+    
+    state.charts.actorTimeline = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: decades,
+            datasets: [{
+                label: type === 'censor' ? 'Approvals Given' : 'Vetted Titles Published',
+                data: counts,
+                borderColor: themeColor,
+                backgroundColor: fillRgba,
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                pointBackgroundColor: themeColor
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.parsed.y} books`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        color: '#64748b',
+                        font: { family: 'Inter', size: 9 },
+                        maxRotation: 0,
+                        autoSkip: true,
+                        maxTicksLimit: 5
+                    }
+                },
+                y: {
+                    grid: { color: '#1e293b' },
+                    ticks: {
+                        color: '#64748b',
+                        font: { family: 'Inter', size: 9 },
+                        maxTicksLimit: 3
+                    }
+                }
+            }
+        }
+    });
+}
+
 // Update Detail side-panel card
 function updateInfoPanel(node) {
     const placeholder = document.getElementById('info-placeholder');
@@ -457,6 +571,17 @@ function updateInfoPanel(node) {
     
     // Degree stats
     document.getElementById('info-degree').innerText = node.degree;
+    
+    // Show and render actor vetting activity timeline
+    const actorTimelineSection = document.getElementById('section-actor-timeline');
+    if (actorTimelineSection) {
+        if (state.censorTimelines && state.censorTimelines[node.id]) {
+            actorTimelineSection.classList.remove('hidden');
+            renderActorTimelineChart(node.id, node.type);
+        } else {
+            actorTimelineSection.classList.add('hidden');
+        }
+    }
 }
 
 // Reset all panels
@@ -480,6 +605,14 @@ function resetVisualization() {
     if (state.charts.cityTimeline) {
         state.charts.cityTimeline.destroy();
         state.charts.cityTimeline = null;
+    }
+    
+    // Hide and clear actor timeline chart
+    const actorTimelineSection = document.getElementById('section-actor-timeline');
+    if (actorTimelineSection) actorTimelineSection.classList.add('hidden');
+    if (state.charts.actorTimeline) {
+        state.charts.actorTimeline.destroy();
+        state.charts.actorTimeline = null;
     }
     
     // Clear geographic flow lines
@@ -605,13 +738,14 @@ function initNetworkGraph() {
     state.gContainer = state.svg.append("g");
     
     // Add Pan & Zoom support
-    state.svg.call(d3.zoom()
+    state.zoom = d3.zoom()
         .extent([[0, 0], [width, height]])
         .scaleExtent([0.15, 6])
         .on("zoom", ({transform}) => {
             state.gContainer.attr("transform", transform);
-        })
-    );
+        });
+        
+    state.svg.call(state.zoom);
     
     updateNetworkGraph();
 }
@@ -1101,6 +1235,16 @@ function updateMapMarkers() {
             state.selectedCity = city;
             state.selectedCityConfession = data.confession;
             updateCityTimelineChart(city, targetDecade, data.confession);
+            
+            // Clear selected node and actor timeline chart
+            state.selectedNode = null;
+            updateNetworkHighlights();
+            const actorTimelineSection = document.getElementById('section-actor-timeline');
+            if (actorTimelineSection) actorTimelineSection.classList.add('hidden');
+            if (state.charts.actorTimeline) {
+                state.charts.actorTimeline.destroy();
+                state.charts.actorTimeline = null;
+            }
             
             // Dynamically show city woodcut image in sidebar if it exists
             const cityAssetMap = {

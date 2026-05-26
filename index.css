@@ -1098,8 +1098,9 @@ input[type="range"]::-moz-range-progress {
     filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.7));
 }
 
-/* Sidebar city timeline chart styling */
-.city-chart-wrapper {
+/* Sidebar city and actor timeline chart styling */
+.city-chart-wrapper,
+.actor-chart-wrapper {
     position: relative;
     height: 130px;
     width: 100%;
