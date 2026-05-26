@@ -27,6 +27,8 @@ const state = {
     map: null,
     mapMarkers: [],
     mapLines: [],
+    activeCityMarkers: {},
+    prevDecadeRings: {},
     
     // Chart.js instances
     charts: {
@@ -522,6 +524,26 @@ function updateInfoPanel(node) {
         state.charts.cityTimeline = null;
     }
     
+    // Select the correct GLB model for the actor
+    let glbName = "book_closed.glb";
+    if (node.type === 'censor') {
+        if (node.is_jesuit) {
+            // Alternate based on name length to keep it deterministic but varied
+            glbName = (node.id.length % 2 === 0) ? "jesuit_christogram.glb" : "sacred_heart_emblem.glb";
+        } else {
+            glbName = "book_closed.glb";
+        }
+    } else if (node.type === 'publisher') {
+        glbName = (node.degree && node.degree > 6) ? "printing_press.glb" : "book_open.glb";
+    }
+    
+    const modelViewer = document.getElementById('sidebar-3d');
+    const modelSection = document.getElementById('section-3d');
+    if (modelViewer && modelSection) {
+        modelViewer.src = `assets/glb/${glbName}`;
+        modelSection.classList.remove('hidden');
+    }
+    
     document.getElementById('info-name').innerText = node.id;
     
     // Type Tag
@@ -594,6 +616,12 @@ function resetVisualization() {
     document.getElementById('info-placeholder').classList.remove('hidden');
     document.getElementById('info-content').classList.add('hidden');
     document.getElementById('section-map-actions').classList.add('hidden');
+    
+    // Hide 3D view
+    const modelViewer = document.getElementById('sidebar-3d');
+    const modelSection = document.getElementById('section-3d');
+    if (modelSection) modelSection.classList.add('hidden');
+    if (modelViewer) modelViewer.removeAttribute('src');
     
     // Hide and clear city timeline chart and cover image
     const cityTimelineSection = document.getElementById('section-city-timeline');
@@ -928,6 +956,23 @@ function initMap() {
         updateMapMarkers();
     });
     
+    // Load historical HRE borders GeoJSON
+    fetch('data/hre_boundary.geojson?v=' + Date.now())
+        .then(response => response.json())
+        .then(data => {
+            L.geoJSON(data, {
+                style: {
+                    color: '#b5912b', // Weathered gold
+                    weight: 1.5,
+                    dashArray: '6, 10',
+                    fillColor: '#b5912b',
+                    fillOpacity: 0.015,
+                    interactive: false // Clicks pass through to city markers
+                }
+            }).addTo(state.map);
+        })
+        .catch(err => console.error("Error loading HRE boundary GeoJSON:", err));
+        
     updateMapMarkers();
 }
 
@@ -1073,9 +1118,7 @@ function updateMapMarkers() {
     // Synchronize active selection timeline chart highlight if visible
     updateCityChartHighlight(targetDecade);
     
-    // Clear old markers and lines
-    state.mapMarkers.forEach(m => state.map.removeLayer(m));
-    state.mapMarkers = [];
+    // Clear old lines
     if (state.mapLines) {
         state.mapLines.forEach(l => state.map.removeLayer(l));
         state.mapLines = [];
@@ -1127,273 +1170,398 @@ function updateMapMarkers() {
         }
     });
     
-    // Render markers on map
-    for (const [city, data] of Object.entries(cityTotals)) {
+    // For each city in cityCoordinates, update/create/remove its marker and prev-decade-ring
+    for (const city of Object.keys(cityCoordinates)) {
         const coords = cityCoordinates[city];
-        if (!coords || data.count < minVolume) continue;
-        
-        // Scale with power-law (exponent 0.35) for a balanced sizing dynamic, then scale by zoom
-        const currentZoom = state.map.getZoom();
-        const zoomFactor = Math.pow(1.5, currentZoom - 6);
-        let radius = (Math.pow(data.count, 0.35) * 1.1 + 1.2) * zoomFactor;
-        const maxCap = Math.max(8, currentZoom * 4.5);
-        radius = Math.max(2.5, Math.min(maxCap, radius));
-        
-        // Calculate previous decade radius for comparison
-        let prevRadius = 0;
+        const data = cityTotals[city];
         const prevData = prevCityTotals[city];
-        if (prevData && prevData.count >= minVolume) {
-            prevRadius = (Math.pow(prevData.count, 0.35) * 1.1 + 1.2) * zoomFactor;
-            prevRadius = Math.max(2.5, Math.min(maxCap, prevRadius));
-        }
         
-        // Determine growth/decline characteristics
-        const isComparisonAvailable = prevRadius > 0;
-        const isSignificantChange = isComparisonAvailable && Math.abs(radius - prevRadius) > 0.5;
-        const isGrowth = isSignificantChange && radius > prevRadius;
-        const isDecline = isSignificantChange && prevRadius > radius;
+        const isVisible = data && data.count >= minVolume;
         
-        // 1. Draw glowing comparison outline of the previous decade FIRST (sits behind the solid marker)
-        if (isSignificantChange) {
-            const prevIconSize = prevRadius * 2.2;
-            const prevDivIcon = L.divIcon({
-                html: `<div class="prev-decade-ring ${isGrowth ? 'prev-ring-growth' : 'prev-ring-decline'}" 
-                            style="width:${prevIconSize}px; height:${prevIconSize}px;"></div>`,
-                className: 'custom-prev-ring',
-                iconSize: [prevIconSize, prevIconSize],
-                iconAnchor: [prevIconSize / 2, prevIconSize / 2]
-            });
+        if (isVisible) {
+            const currentZoom = state.map.getZoom();
+            const zoomFactor = Math.pow(1.5, currentZoom - 6);
+            let radius = (Math.pow(data.count, 0.35) * 1.1 + 1.2) * zoomFactor;
+            const maxCap = Math.max(8, currentZoom * 4.5);
+            radius = Math.max(2.5, Math.min(maxCap, radius));
+            const iconSize = radius * 2.2;
             
-            const prevMarker = L.marker(coords, {
-                icon: prevDivIcon,
-                zIndexOffset: -100, // Render behind the main city markers
-                interactive: false // Click events pass through to the main marker
-            }).addTo(state.map);
-            state.mapMarkers.push(prevMarker);
-        }
-        
-        // 2. Determine styling parameters for the active main city marker
-        let borderStrokeColor = "#ffffff";
-        let strokeWeight = 1.0;
-        let glowClass = "glow-neutral";
-        
-        if (isSignificantChange) {
-            if (isGrowth) {
-                borderStrokeColor = "#10b981"; // Emerald green
-                strokeWeight = 2.0;
-                glowClass = "glow-growth";
-            } else if (isDecline) {
-                borderStrokeColor = "#ef4444"; // Crimson red
-                strokeWeight = 2.0;
-                glowClass = "glow-decline";
-            }
-        }
-        
-        let markerClasses = [glowClass];
-        if (data.count > 500) {
-            markerClasses.push('pulse-marker');
-        }
-        
-        let color = "#94a3b8"; // Mixed / Gray
-        if (data.confession === "Catholic") color = "#d4af37"; // Gold
-        else if (data.confession === "Protestant") color = "#5b21b6"; // Deep Purple
-        
-        // Create custom Leaflet divIcon using the Asset Agent's marker images
-        let markerImg = "assets/markers/mixed_marker.jpg";
-        if (data.confession === "Catholic") markerImg = "assets/markers/catholic_marker.jpg";
-        else if (data.confession === "Protestant") markerImg = "assets/markers/protestant_marker.jpg";
-        
-        const iconSize = radius * 2.2;
-        
-        const divIcon = L.divIcon({
-            html: `<div class="custom-map-marker-wrapper ${markerClasses.join(' ')}" style="width:${iconSize}px; height:${iconSize}px;">
-                     <div class="marker-image-wrapper" style="width:100%; height:100%;">
-                         <img src="${markerImg}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
-                     </div>
-                   </div>`,
-            className: 'custom-map-marker',
-            iconSize: [iconSize, iconSize],
-            iconAnchor: [iconSize / 2, iconSize / 2]
-        });
-        
-        // Create the active main city marker
-        const marker = L.marker(coords, {
-            icon: divIcon
-        }).addTo(state.map);
-        
-        // Rich tooltip detail
-        marker.bindTooltip(`
-            <div style="font-family: inherit; font-size:12px;">
-                <strong style="font-size:13px; color:#ffffff;">${city}</strong><br/>
-                <span style="color:#94a3b8; font-weight:600;">Confession:</span> ${data.confession}<br/>
-                <span style="color:#94a3b8; font-weight:600;">Decade Output:</span> ${data.count} titles
-            </div>
-        `, { direction: 'top', offset: [0, -10] });
-        
-        // Sidebar metadata bind on click
-        marker.on('click', () => {
-            state.selectedCity = city;
-            state.selectedCityConfession = data.confession;
-            updateCityTimelineChart(city, targetDecade, data.confession);
-            
-            // Clear selected node and actor timeline chart
-            state.selectedNode = null;
-            updateNetworkHighlights();
-            const actorTimelineSection = document.getElementById('section-actor-timeline');
-            if (actorTimelineSection) actorTimelineSection.classList.add('hidden');
-            if (state.charts.actorTimeline) {
-                state.charts.actorTimeline.destroy();
-                state.charts.actorTimeline = null;
+            let prevRadius = 0;
+            if (prevData && prevData.count >= minVolume) {
+                prevRadius = (Math.pow(prevData.count, 0.35) * 1.1 + 1.2) * zoomFactor;
+                prevRadius = Math.max(2.5, Math.min(maxCap, prevRadius));
             }
             
-            // Dynamically show city woodcut image in sidebar if it exists
-            const cityAssetMap = {
-                "Leipzig": "leipzig",
-                "Frankfurt am Main": "frankfurt",
-                "Köln": "cologne",
-                "München": "munich",
-                "Wien": "vienna"
-            };
-            const assetName = cityAssetMap[city];
-            const cityImgSection = document.getElementById('section-city-image');
-            const cityImg = document.getElementById('sidebar-city-image');
+            const isComparisonAvailable = prevRadius > 0;
+            const isSignificantChange = isComparisonAvailable && Math.abs(radius - prevRadius) > 0.5;
+            const isGrowth = isSignificantChange && radius > prevRadius;
+            const isDecline = isSignificantChange && prevRadius > radius;
             
-            if (assetName && cityImg && cityImgSection) {
-                cityImg.src = `assets/hubs/city_${assetName}.jpg`;
-                cityImgSection.classList.remove('hidden');
-            } else if (cityImgSection) {
-                cityImgSection.classList.add('hidden');
+            let glowClass = "glow-neutral";
+            if (isSignificantChange) {
+                if (isGrowth) {
+                    glowClass = "glow-growth";
+                } else if (isDecline) {
+                    glowClass = "glow-decline";
+                }
             }
             
-            const sidePanel = document.getElementById('info-content');
-            const placeholder = document.getElementById('info-placeholder');
-            
-            placeholder.classList.add('hidden');
-            sidePanel.classList.remove('hidden');
-            
-            document.getElementById('info-name').innerText = city;
-            
-            // Draw geographic flow lines for this city
-            if (state.mapLines) {
-                state.mapLines.forEach(l => state.map.removeLayer(l));
-            }
-            state.mapLines = [];
-            
-            if (state.networkData) {
-                // Find all nodes (actors) associated with this city
-                const cityNodes = state.networkData.nodes.filter(n => getNodeCity(n) === city);
-                const cityNodeIds = new Set(cityNodes.map(n => n.id));
-                const drawnDestinations = new Set();
-                
-                // Find all links connected to any actor in this city
-                const connectedLinks = state.networkData.links.filter(l => {
-                    const sId = typeof l.source === 'object' ? l.source.id : l.source;
-                    const tId = typeof l.target === 'object' ? l.target.id : l.target;
-                    return cityNodeIds.has(sId) || cityNodeIds.has(tId);
-                });
-                
-                connectedLinks.forEach(link => {
-                    const sId = typeof link.source === 'object' ? link.source.id : link.source;
-                    const tId = typeof link.target === 'object' ? link.target.id : link.target;
-                    
-                    const isSourceInCity = cityNodeIds.has(sId);
-                    const otherNodeId = isSourceInCity ? tId : sId;
-                    const otherNode = state.networkData.nodes.find(n => n.id === otherNodeId);
-                    
-                    if (otherNode) {
-                        const destCity = getNodeCity(otherNode);
-                        if (destCity && cityCoordinates[destCity] && destCity !== city) {
-                            if (drawnDestinations.has(destCity)) return; // Avoid duplicate lines
-                            drawnDestinations.add(destCity);
-                            
-                            const destCoords = cityCoordinates[destCity];
-                            
-                            // Set style based on city confession
-                            const lineColor = data.confession === "Catholic" ? '#38bdf8' : 
-                                              (data.confession === "Protestant" ? '#5b21b6' : '#cbd5e1');
-                            
-                            // Draw flow polyline
-                            const polyline = L.polyline([coords, destCoords], {
-                                color: lineColor,
-                                weight: 3.5,
-                                opacity: 0.75,
-                                dashArray: '8, 12',
-                                className: 'flow-polyline'
-                            }).addTo(state.map);
-                            
-                            // Tooltip showing connection
-                            polyline.bindTooltip(`
-                                <div style="font-family: inherit; font-size:11px;">
-                                    <strong>Geographic Channel:</strong><br/>
-                                    ${city} &harr; ${destCity}
-                                </div>
-                            `, { sticky: true });
-                            
-                            state.mapLines.push(polyline);
-                        }
-                    }
-                });
+            let markerClasses = [glowClass];
+            if (data.count > 500) {
+                markerClasses.push('pulse-marker');
             }
             
-            const typeTag = document.getElementById('info-tag-type');
-            typeTag.innerText = 'Printing Center';
-            typeTag.style.backgroundColor = color;
-            typeTag.style.color = '#ffffff';
+            let color = "#94a3b8";
+            if (data.confession === "Catholic") color = "#d4af37";
+            else if (data.confession === "Protestant") color = "#5b21b6";
             
-            document.getElementById('info-tag-jesuit').classList.add('hidden');
-            document.getElementById('section-gnd').classList.add('hidden');
-            document.getElementById('section-occupations').classList.add('hidden');
+            let markerImg = "assets/markers/mixed_marker.jpg";
+            if (data.confession === "Catholic") markerImg = "assets/markers/catholic_marker.jpg";
+            else if (data.confession === "Protestant") markerImg = "assets/markers/protestant_marker.jpg";
             
-            const bioText = document.getElementById('info-biography');
-            document.getElementById('section-biography').classList.remove('hidden');
-            
-            // Reconstruct text to dynamically show active and previous decade comparison in sidebar
-            let comparisonText = "";
-            if (prevData && prevData.count > 0) {
-                const diff = data.count - prevData.count;
-                const percent = ((diff / prevData.count) * 100).toFixed(1);
-                const verb = diff >= 0 ? "increased" : "decreased";
-                const changeColor = diff >= 0 ? "#10b981" : "#ef4444";
-                const sign = diff >= 0 ? "+" : "";
-                comparisonText = ` This represents a <strong style="color: ${changeColor};">${sign}${percent}%</strong> output change (${verb} by ${Math.abs(diff)} titles) compared to the previous decade (${previousDecade}s: ${prevData.count} titles).`;
-            }
-            
-            bioText.innerHTML = `
-                Historically classified as a <strong>${data.confession}</strong> printing hub.<br/><br/>
-                During the <strong>${targetDecade}s</strong>, publishers in ${city} released a total of <strong>${data.count}</strong> cataloged titles in our database.${comparisonText}
+            const tooltipHTML = `
+                <div style="font-family: inherit; font-size:12px;">
+                    <strong style="font-size:13px; color:#ffffff;">${city}</strong><br/>
+                    <span style="color:#94a3b8; font-weight:600;">Confession:</span> ${data.confession}<br/>
+                    <span style="color:#94a3b8; font-weight:600;">Decade Output:</span> ${data.count} titles
+                </div>
             `;
             
-            document.getElementById('info-degree').innerText = 'N/A';
-            
-            // Show map actions panel for highlighting network actors
-            const mapActions = document.getElementById('section-map-actions');
-            mapActions.classList.remove('hidden');
-            
-            const highlightBtn = document.getElementById('btn-highlight-city-actors');
-            // Remove previous event listeners by cloning
-            const newHighlightBtn = highlightBtn.cloneNode(true);
-            highlightBtn.parentNode.replaceChild(newHighlightBtn, highlightBtn);
-            
-            newHighlightBtn.innerText = `Highlight ${city} Actors in Network`;
-            newHighlightBtn.addEventListener('click', () => {
-                // 1. Switch to network tab
-                const netTabBtn = document.querySelector('[data-tab="network-tab"]');
-                if (netTabBtn) netTabBtn.click();
+            let marker = state.activeCityMarkers[city];
+            if (marker) {
+                marker._shouldRemove = false;
+                if (!state.map.hasLayer(marker)) {
+                    marker.addTo(state.map);
+                }
                 
-                // 2. Clear current search input
-                document.getElementById('search-input').value = '';
-                state.searchQuery = '';
+                const icon = marker.options.icon;
+                if (icon && icon.options) {
+                    icon.options.iconSize = [iconSize, iconSize];
+                    icon.options.iconAnchor = [iconSize / 2, iconSize / 2];
+                }
                 
-                // 3. Highlight 2D D3 nodes matching this city
-                state.selectedNode = null;
-                state.highlightCity = city;
-                updateNetworkHighlights();
-            });
-        });
-        
-        state.mapMarkers.push(marker);
+                const el = marker.getElement();
+                if (el) {
+                    el.style.width = `${iconSize}px`;
+                    el.style.height = `${iconSize}px`;
+                    el.style.marginLeft = `${-iconSize / 2}px`;
+                    el.style.marginTop = `${-iconSize / 2}px`;
+                    el.style.opacity = '1';
+                    
+                    const wrapper = el.querySelector('.custom-map-marker-wrapper');
+                    if (wrapper) {
+                        wrapper.className = `custom-map-marker-wrapper ${markerClasses.join(' ')}`;
+                        wrapper.style.width = '100%';
+                        wrapper.style.height = '100%';
+                    }
+                    const img = el.querySelector('img');
+                    if (img) {
+                        img.src = markerImg;
+                    }
+                }
+                
+                marker.setTooltipContent(tooltipHTML);
+            } else {
+                const divIcon = L.divIcon({
+                    html: `<div class="custom-map-marker-wrapper ${markerClasses.join(' ')}" style="width:${iconSize}px; height:${iconSize}px;">
+                             <div class="marker-image-wrapper" style="width:100%; height:100%;">
+                                 <img src="${markerImg}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                             </div>
+                           </div>`,
+                    className: 'custom-map-marker',
+                    iconSize: [iconSize, iconSize],
+                    iconAnchor: [iconSize / 2, iconSize / 2]
+                });
+                
+                marker = L.marker(coords, {
+                    icon: divIcon
+                }).addTo(state.map);
+                
+                marker.bindTooltip(tooltipHTML, { direction: 'top', offset: [0, -10] });
+                
+                marker.on('click', () => {
+                    state.selectedCity = city;
+                    state.selectedCityConfession = data.confession;
+                    updateCityTimelineChart(city, targetDecade, data.confession);
+                    
+                    state.selectedNode = null;
+                    updateNetworkHighlights();
+                    const actorTimelineSection = document.getElementById('section-actor-timeline');
+                    if (actorTimelineSection) actorTimelineSection.classList.add('hidden');
+                    if (state.charts.actorTimeline) {
+                        state.charts.actorTimeline.destroy();
+                        state.charts.actorTimeline = null;
+                    }
+                    
+                    const cityAssetMap = {
+                        "Leipzig": "leipzig",
+                        "Frankfurt am Main": "frankfurt",
+                        "Köln": "cologne",
+                        "München": "munich",
+                        "Wien": "vienna"
+                    };
+                    const assetName = cityAssetMap[city];
+                    const cityImgSection = document.getElementById('section-city-image');
+                    const cityImg = document.getElementById('sidebar-city-image');
+                    
+                    if (assetName && cityImg && cityImgSection) {
+                        cityImg.src = `assets/hubs/city_${assetName}.jpg`;
+                        cityImgSection.classList.remove('hidden');
+                    } else if (cityImgSection) {
+                        cityImgSection.classList.add('hidden');
+                    }
+                    
+                    // Show city 3D model
+                    const cityGLBMap = {
+                        "Leipzig": "coin_leipzig.glb",
+                        "München": "coin_munich.glb",
+                        "Munich": "coin_munich.glb",
+                        "Frankfurt am Main": "coin_imperial_eagle.glb",
+                        "Wien": "coin_imperial_eagle.glb",
+                        "Vienna": "coin_imperial_eagle.glb"
+                    };
+                    const glbName = cityGLBMap[city] || "book_closed.glb";
+                    const modelViewer = document.getElementById('sidebar-3d');
+                    const modelSection = document.getElementById('section-3d');
+                    if (modelViewer && modelSection) {
+                        modelViewer.src = `assets/glb/${glbName}`;
+                        modelSection.classList.remove('hidden');
+                    }
+                    
+                    const sidePanel = document.getElementById('info-content');
+                    const placeholder = document.getElementById('info-placeholder');
+                    
+                    placeholder.classList.add('hidden');
+                    sidePanel.classList.remove('hidden');
+                    
+                    document.getElementById('info-name').innerText = city;
+                    
+                    if (state.mapLines) {
+                        state.mapLines.forEach(l => state.map.removeLayer(l));
+                    }
+                    state.mapLines = [];
+                    
+                    if (state.networkData) {
+                        const cityNodes = state.networkData.nodes.filter(n => getNodeCity(n) === city);
+                        const cityNodeIds = new Set(cityNodes.map(n => n.id));
+                        const drawnDestinations = new Set();
+                        
+                        const connectedLinks = state.networkData.links.filter(l => {
+                            const sId = typeof l.source === 'object' ? l.source.id : l.source;
+                            const tId = typeof l.target === 'object' ? l.target.id : l.target;
+                            return cityNodeIds.has(sId) || cityNodeIds.has(tId);
+                        });
+                        
+                        connectedLinks.forEach(link => {
+                            const sId = typeof link.source === 'object' ? link.source.id : link.source;
+                            const tId = typeof link.target === 'object' ? link.target.id : link.target;
+                            
+                            const isSourceInCity = cityNodeIds.has(sId);
+                            const otherNodeId = isSourceInCity ? tId : sId;
+                            const otherNode = state.networkData.nodes.find(n => n.id === otherNodeId);
+                            
+                            if (otherNode) {
+                                const destCity = getNodeCity(otherNode);
+                                if (destCity && cityCoordinates[destCity] && destCity !== city) {
+                                    if (drawnDestinations.has(destCity)) return;
+                                    drawnDestinations.add(destCity);
+                                    
+                                    const destCoords = cityCoordinates[destCity];
+                                    const lineColor = data.confession === "Catholic" ? '#38bdf8' : 
+                                                      (data.confession === "Protestant" ? '#5b21b6' : '#cbd5e1');
+                                    
+                                    const polyline = L.polyline([coords, destCoords], {
+                                        color: lineColor,
+                                        weight: 3.5,
+                                        opacity: 0.75,
+                                        dashArray: '8, 12',
+                                        className: 'flow-polyline'
+                                    }).addTo(state.map);
+                                    
+                                    polyline.bindTooltip(`
+                                        <div style="font-family: inherit; font-size:11px;">
+                                            <strong>Geographic Channel:</strong><br/>
+                                            ${city} &harr; ${destCity}
+                                        </div>
+                                    `, { sticky: true });
+                                    
+                                    state.mapLines.push(polyline);
+                                }
+                            }
+                        });
+                    }
+                    
+                    const typeTag = document.getElementById('info-tag-type');
+                    typeTag.innerText = 'Printing Center';
+                    typeTag.style.backgroundColor = color;
+                    typeTag.style.color = '#ffffff';
+                    
+                    document.getElementById('info-tag-jesuit').classList.add('hidden');
+                    document.getElementById('section-gnd').classList.add('hidden');
+                    document.getElementById('section-occupations').classList.add('hidden');
+                    
+                    const bioText = document.getElementById('info-biography');
+                    document.getElementById('section-biography').classList.remove('hidden');
+                    
+                    let comparisonText = "";
+                    if (prevData && prevData.count > 0) {
+                        const diff = data.count - prevData.count;
+                        const percent = ((diff / prevData.count) * 100).toFixed(1);
+                        const verb = diff >= 0 ? "increased" : "decreased";
+                        const changeColor = diff >= 0 ? "#10b981" : "#ef4444";
+                        const sign = diff >= 0 ? "+" : "";
+                        comparisonText = ` This represents a <strong style="color: ${changeColor};">${sign}${percent}%</strong> output change (${verb} by ${Math.abs(diff)} titles) compared to the previous decade (${previousDecade}s: ${prevData.count} titles).`;
+                    }
+                    
+                    bioText.innerHTML = `
+                        Historically classified as a <strong>${data.confession}</strong> printing hub.<br/><br/>
+                        During the <strong>${targetDecade}s</strong>, publishers in ${city} released a total of <strong>${data.count}</strong> cataloged titles in our database.${comparisonText}
+                    `;
+                    
+                    document.getElementById('info-degree').innerText = 'N/A';
+                    
+                    const mapActions = document.getElementById('section-map-actions');
+                    mapActions.classList.remove('hidden');
+                    
+                    const highlightBtn = document.getElementById('btn-highlight-city-actors');
+                    const newHighlightBtn = highlightBtn.cloneNode(true);
+                    highlightBtn.parentNode.replaceChild(newHighlightBtn, highlightBtn);
+                    
+                    newHighlightBtn.innerText = `Highlight ${city} Actors in Network`;
+                    newHighlightBtn.addEventListener('click', () => {
+                        const netTabBtn = document.querySelector('[data-tab="network-tab"]');
+                        if (netTabBtn) netTabBtn.click();
+                        document.getElementById('search-input').value = '';
+                        state.searchQuery = '';
+                        state.selectedNode = null;
+                        state.highlightCity = city;
+                        updateNetworkHighlights();
+                    });
+                });
+                
+                state.activeCityMarkers[city] = marker;
+            }
+            
+            const hasRing = isSignificantChange;
+            let ringMarker = state.prevDecadeRings[city];
+            
+            if (hasRing) {
+                const prevIconSize = prevRadius * 2.2;
+                const ringClasses = [isGrowth ? 'prev-ring-growth' : 'prev-ring-decline'];
+                
+                if (ringMarker) {
+                    ringMarker._shouldRemove = false;
+                    if (!state.map.hasLayer(ringMarker)) {
+                        ringMarker.addTo(state.map);
+                    }
+                    
+                    const icon = ringMarker.options.icon;
+                    if (icon && icon.options) {
+                        icon.options.iconSize = [prevIconSize, prevIconSize];
+                        icon.options.iconAnchor = [prevIconSize / 2, prevIconSize / 2];
+                    }
+                    
+                    const el = ringMarker.getElement();
+                    if (el) {
+                        el.style.width = `${prevIconSize}px`;
+                        el.style.height = `${prevIconSize}px`;
+                        el.style.marginLeft = `${-prevIconSize / 2}px`;
+                        el.style.marginTop = `${-prevIconSize / 2}px`;
+                        el.style.opacity = '1';
+                        
+                        const ring = el.querySelector('.prev-decade-ring');
+                        if (ring) {
+                            ring.className = `prev-decade-ring ${ringClasses.join(' ')}`;
+                            ring.style.width = '100%';
+                            ring.style.height = '100%';
+                        }
+                    }
+                } else {
+                    const prevDivIcon = L.divIcon({
+                        html: `<div class="prev-decade-ring ${ringClasses.join(' ')}" style="width:${prevIconSize}px; height:${prevIconSize}px;"></div>`,
+                        className: 'custom-prev-ring',
+                        iconSize: [prevIconSize, prevIconSize],
+                        iconAnchor: [prevIconSize / 2, prevIconSize / 2]
+                    });
+                    
+                    ringMarker = L.marker(coords, {
+                        icon: prevDivIcon,
+                        zIndexOffset: -100,
+                        interactive: false
+                    }).addTo(state.map);
+                    
+                    state.prevDecadeRings[city] = ringMarker;
+                }
+            } else {
+                if (ringMarker) {
+                    ringMarker._shouldRemove = true;
+                    const el = ringMarker.getElement();
+                    if (el) {
+                        el.style.width = '0px';
+                        el.style.height = '0px';
+                        el.style.marginLeft = '0px';
+                        el.style.marginTop = '0px';
+                        el.style.opacity = '0';
+                        const currentRingMarker = ringMarker;
+                        setTimeout(() => {
+                            if (currentRingMarker._shouldRemove) {
+                                state.map.removeLayer(currentRingMarker);
+                            }
+                        }, 600);
+                    } else {
+                        state.map.removeLayer(ringMarker);
+                    }
+                    delete state.prevDecadeRings[city];
+                }
+            }
+            
+        } else {
+            const marker = state.activeCityMarkers[city];
+            if (marker) {
+                marker._shouldRemove = true;
+                const el = marker.getElement();
+                if (el) {
+                    el.style.width = '0px';
+                    el.style.height = '0px';
+                    el.style.marginLeft = '0px';
+                    el.style.marginTop = '0px';
+                    el.style.opacity = '0';
+                    const currentMarker = marker;
+                    setTimeout(() => {
+                        if (currentMarker._shouldRemove) {
+                            state.map.removeLayer(currentMarker);
+                        }
+                    }, 600);
+                } else {
+                    state.map.removeLayer(marker);
+                }
+                delete state.activeCityMarkers[city];
+            }
+            
+            const ringMarker = state.prevDecadeRings[city];
+            if (ringMarker) {
+                ringMarker._shouldRemove = true;
+                const el = ringMarker.getElement();
+                if (el) {
+                    el.style.width = '0px';
+                    el.style.height = '0px';
+                    el.style.marginLeft = '0px';
+                    el.style.marginTop = '0px';
+                    el.style.opacity = '0';
+                    const currentRingMarker = ringMarker;
+                    setTimeout(() => {
+                        if (currentRingMarker._shouldRemove) {
+                            state.map.removeLayer(currentRingMarker);
+                        }
+                    }, 600);
+                } else {
+                    state.map.removeLayer(ringMarker);
+                }
+                delete state.prevDecadeRings[city];
+            }
+        }
     }
-
+    
     // If a city is currently selected, dynamically update its sidebar text for the new active decade
     if (state.selectedCity) {
         const city = state.selectedCity;
