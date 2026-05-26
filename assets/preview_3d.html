@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Asset Preview Gallery</title>
+    
+    <!-- Import Google model-viewer web component -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 40px;
+            margin: 0;
+        }
+        h1 {
+            color: #38bdf8;
+            margin-bottom: 8px;
+        }
+        p {
+            color: #94a3b8;
+            margin-bottom: 30px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+        .card {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        .model-container {
+            width: 100%;
+            height: 300px;
+            background-color: #0b0f19;
+            position: relative;
+        }
+        model-viewer {
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+        }
+        .info {
+            padding: 16px;
+            border-top: 1px solid #334155;
+        }
+        .title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #f1f5f9;
+            margin-bottom: 4px;
+        }
+        .filename {
+            font-family: monospace;
+            font-size: 12px;
+            color: #38bdf8;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <h1>3D Generated Assets Gallery</h1>
+    <p>Drag, zoom, and rotate the 3D models below to preview the organized assets and help map the remaining city coins.</p>
+    
+    <div class="grid">
+        <!-- Organized Assets -->
+        <div class="card">
+            <div class="model-container">
+                <model-viewer src="glb/printing_press.glb" auto-rotate camera-controls shadow-intensity="1"></model-viewer>
+            </div>
+            <div class="info">
+                <div class="title">Printing Press (Loader)</div>
+                <div class="filename">glb/printing_press.glb</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="model-container">
+                <model-viewer src="glb/jesuit_christogram.glb" auto-rotate camera-controls shadow-intensity="1"></model-viewer>
+            </div>
+            <div class="info">
+                <div class="title">Jesuit Christogram</div>
+                <div class="filename">glb/jesuit_christogram.glb</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="model-container">
+                <model-viewer src="glb/sacred_heart_emblem.glb" auto-rotate camera-controls shadow-intensity="1"></model-viewer>
+            </div>
+            <div class="info">
+                <div class="title">Sacred Heart Emblem</div>
+                <div class="filename">glb/sacred_heart_emblem.glb</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="model-container">
+                <model-viewer src="glb/medal_jonas_luukkonen.glb" auto-rotate camera-controls shadow-intensity="1"></model-viewer>
+            </div>
+            <div class="info">
+                <div class="title">Joonas Luukkonen Medal</div>
+                <div class="filename">glb/medal_jonas_luukkonen.glb</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="model-container">
+                <model-viewer src="glb/coin_leipzig.glb" auto-rotate camera-controls shadow-intensity="1"></model-viewer>
+            </div>
+            <div class="info">
+                <div class="title">Leipzig Coin (Divided Shield)</div>
+                <div class="filename">glb/coin_leipzig.glb</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="model-container">
+                <model-viewer src="glb/coin_munich.glb" auto-rotate camera-controls shadow-intensity="1"></model-viewer>
+            </div>
+            <div class="info">
+                <div class="title">Munich Coin (Monk on Shield)</div>
+                <div class="filename">glb/coin_munich.glb</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="model-container">
+                <model-viewer src="glb/gate_munich.glb" auto-rotate camera-controls shadow-intensity="1"></model-viewer>
+            </div>
+            <div class="info">
+                <div class="title">Munich City Gate</div>
+                <div class="filename">glb/gate_munich.glb</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="model-container">
+                <model-viewer src="glb/coin_imperial_eagle.glb" auto-rotate camera-controls shadow-intensity="1"></model-viewer>
+            </div>
+            <div class="info">
+                <div class="title">Imperial Eagle Coin (Vienna/Frankfurt)</div>
+                <div class="filename">glb/coin_imperial_eagle.glb</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="model-container">
+                <model-viewer src="glb/book_closed.glb" auto-rotate camera-controls shadow-intensity="1"></model-viewer>
+            </div>
+            <div class="info">
+                <div class="title">Closed Leather Book</div>
+                <div class="filename">glb/book_closed.glb</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="model-container">
+                <model-viewer src="glb/book_open.glb" auto-rotate camera-controls shadow-intensity="1"></model-viewer>
+            </div>
+            <div class="info">
+                <div class="title">Open Book Spread</div>
+                <div class="filename">glb/book_open.glb</div>
+            </div>
+        </div>
+
+        <!-- Unmapped Assets in compressed/ -->
+        <div class="card">
+            <div class="model-container">
+                <model-viewer src="glb/compressed/Meshy_AI_Ornate_Coat_of_Arms_M_0526082108_texture-v1.glb" auto-rotate camera-controls shadow-intensity="1"></model-viewer>
+            </div>
+            <div class="info">
+                <div class="title">Ornate Coat of Arms</div>
+                <div class="filename">glb/compressed/Meshy_AI_Ornate_Coat_of_Arms_M_...</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="model-container">
+                <model-viewer src="glb/compressed/Meshy_AI_Saint_on_Shield_Panel_0526082135_texture-v1.glb" auto-rotate camera-controls shadow-intensity="1"></model-viewer>
+            </div>
+            <div class="info">
+                <div class="title">Saint on Shield Panel</div>
+                <div class="filename">glb/compressed/Meshy_AI_Saint_on_Shield_Panel_...</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="model-container">
+                <model-viewer src="glb/compressed/Meshy_AI_Guardians_of_the_City_0526082144_texture-v1.glb" auto-rotate camera-controls shadow-intensity="1"></model-viewer>
+            </div>
+            <div class="info">
+                <div class="title">Guardians of the City</div>
+                <div class="filename">glb/compressed/Meshy_AI_Guardians_of_the_City_...</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="model-container">
+                <model-viewer src="glb/compressed/Meshy_AI_Eagle_and_Serpent_on__0526082156_texture-v1.glb" auto-rotate camera-controls shadow-intensity="1"></model-viewer>
+            </div>
+            <div class="info">
+                <div class="title">Eagle and Serpent</div>
+                <div class="filename">glb/compressed/Meshy_AI_Eagle_and_Serpent_on_...</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
