@@ -124,6 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initTabs();
     initControls();
     loadData();
+    initTeamCabinet();
 });
 
 // Load resources via Fetch
@@ -1868,5 +1869,106 @@ function initTimelines() {
                 y: { min: 0, max: 100, grid: { color: '#1e293b' }, ticks: { color: '#64748b', callback: v => `${v}%` } }
             }
         }
+    });
+}
+
+// ==========================================================================
+// PORTRAIT / COIN CABINET TEAM VIEW CONTROLLER
+// ==========================================================================
+const TEAM_MEMBERS = [
+    {
+        name: "Thea Lindquist",
+        role: "Team Lead & Cultural Heritage Expert",
+        bio: "Focuses on cultural heritage data structures, matching research questions to historical and digital humanities methodologies, data sources, integrations and enhancements for humanities applications, and off-kilter humor...",
+        model: "assets/glb/coin_imperial_eagle.glb"
+    },
+    {
+        name: "Eetu Mäkelä",
+        role: "Team Lead & Computing Coordinator",
+        bio: "Provides organisational support, data access, compute access, and matching research questions to algorithms. Expert in all kinds of computing, machine learning, and digital humanities data wrangling...",
+        model: "assets/glb/coin_imperial_eagle.glb"
+    },
+    {
+        name: "Duong Nguyen",
+        role: "Network Analyst & Statistician",
+        bio: "Specializes in network analysis (clustering, simulations, hypothesis testing, multivariate model, event study), natural language processing (NER, sentiment analysis, topic modeling), programming, and data visualization...",
+        model: "assets/glb/coin_leipzig.glb"
+    },
+    {
+        name: "Harri",
+        role: "Data Science Developer",
+        bio: "Master's student in data science. Expert in software development, full stack web development (React), interactive data visualization (Python), LLMs, and prompt engineering...",
+        model: "assets/glb/coin_leipzig.glb"
+    },
+    {
+        name: "Aisvarya",
+        role: "AI Engineer & Researcher",
+        bio: "Focuses on Artificial Intelligence, Large Language Models, Local Models, Hallucination Mitigation, Prompt Engineering, Machine Learning, Cyber Security, Privacy, Qualitative Research and Analysis, and Human Computer Interaction...",
+        model: "assets/glb/coin_leipzig.glb"
+    },
+    {
+        name: "Sophia",
+        role: "DH Data Pipeline Specialist",
+        bio: "MA student in DH. Works on natural language processing (sentiment/emotion/bias detection), digital literary studies & corpus analysis, Python, data pipelines, and LLM data quality (hallucinations, trustworthiness)...",
+        model: "assets/glb/coin_munich.glb"
+    },
+    {
+        name: "Wanshu",
+        role: "Early Modern Literature Scholar",
+        bio: "Pursuing a Master's in English Literature. Combines close reading with computational methods such as Topic Modeling (GDSL), Sentiment Analysis, Voyant Tools, CLIC-based analysis, TEI annotation, and metadata-based archival work...",
+        model: "assets/glb/coin_munich.glb"
+    },
+    {
+        name: "Joonas Luukkonen",
+        role: "Cognitive Linguist & Web Developer",
+        bio: "BA student in English and Culture with minors in Japanese, Data Science, and Computer Science. Researches the intersection of language, cognition, and technology, specializing in digital humanities, metaphor analysis, and NLP...",
+        model: "assets/glb/medal_jonas_luukkonen.glb"
+    },
+    {
+        name: "Annalisa",
+        role: "Medieval & Neo-Latin Text Specialist",
+        bio: "PhD student in Medieval and Neo-Latin Studies. Focuses on text editing, medieval and modern European literature, early modern scholarly networks, TEI/XML schema modeling, event modeling, and AI-assisted data modeling...",
+        model: "assets/glb/coin_munich.glb"
+    },
+    {
+        name: "Giacomo",
+        role: "Digital History Researcher",
+        bio: "PhD candidate in Digital History. Researches rumour repetition & epistemic contamination, 19th-century newspapers rumours, and NLP pipelines in Python, HTML, and R...",
+        model: "assets/glb/coin_munich.glb"
+    },
+    {
+        name: "Udita",
+        role: "Algorithm & Systems Analyst",
+        bio: "MA student in CS, focusing on algorithm, logic, and computation. Researches programming languages, software development, network analysis, complex systems, and digital humanities literature review...",
+        model: "assets/glb/coin_leipzig.glb"
+    }
+];
+
+function initTeamCabinet() {
+    const grid = document.getElementById('team-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    
+    TEAM_MEMBERS.forEach(member => {
+        const card = document.createElement('div');
+        card.className = 'team-card';
+        card.innerHTML = `
+            <div class="coin-viewer-wrapper">
+                <model-viewer 
+                    src="${member.model}" 
+                    auto-rotate 
+                    camera-controls 
+                    disable-zoom
+                    disable-pan
+                    shadow-intensity="0.6"
+                    style="width: 100%; height: 100%;"
+                    class="team-coin-model">
+                </model-viewer>
+            </div>
+            <h3>${member.name}</h3>
+            <div class="team-role">${member.role}</div>
+            <p class="team-bio">${member.bio}</p>
+        `;
+        grid.appendChild(card);
     });
 }
