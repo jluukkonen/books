@@ -8,26 +8,35 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=UnifrakturMaguntia&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
     
     <!-- CSS Dependencies -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="index.css?v=2">
     
     <!-- JS Dependencies (from CDN for ease of hosting) -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/3d-force-graph"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
 </head>
 <body>
     <div class="app-container">
         <!-- Sidebar / Filter Controls & Info panel -->
         <aside class="sidebar">
             <div class="brand">
-                <img src="assets/branding/branding_logo.jpg" alt="Vetting the HRE Logo" class="brand-logo">
+                <model-viewer 
+                    src="assets/glb/jesuit_christogram.glb" 
+                    auto-rotate 
+                    camera-controls 
+                    disable-zoom
+                    disable-pan
+                    shadow-intensity="0.5"
+                    style="width: 42px; height: 42px; background: transparent; border-radius: 50%; flex-shrink: 0;"
+                    class="brand-logo-3d">
+                </model-viewer>
                 <div>
                     <h1>Vetting the HRE</h1>
                     <span class="subtitle">300 Years of Book Censorship (1500–1800)</span>
@@ -70,13 +79,31 @@
             
             <!-- Dynamic Info Box -->
             <div class="panel info-panel" id="info-panel">
-                <div class="info-placeholder" id="info-placeholder">
-                    <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="placeholder-icon">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                    </svg>
-                    <p>Click on any node in the network or a city on the map to inspect its details and metrics.</p>
+                <div class="info-placeholder" id="info-placeholder" style="justify-content: flex-start; padding-top: 10px;">
+                    <model-viewer 
+                        src="assets/glb/sacred_heart_emblem.glb" 
+                        auto-rotate 
+                        camera-controls 
+                        shadow-intensity="1.2"
+                        style="width: 100%; height: 160px; background: transparent; margin-bottom: 8px;"
+                        class="placeholder-3d-model">
+                    </model-viewer>
+                    <h3 class="placeholder-title" style="font-family: 'UnifrakturMaguntia', serif; font-size: 24px; color: #f8fafc; margin: 4px 0 10px 0; letter-spacing: 0.5px;">Dashboard Guide</h3>
+                    <div class="placeholder-guide" style="text-align: left; font-size: 11.5px; color: #94a3b8; line-height: 1.5; padding: 0 12px; display: flex; flex-direction: column; gap: 8px; font-family: 'Inter', sans-serif;">
+                        <p style="font-family: 'IM Fell English', serif; font-style: italic; font-size: 13px; color: #cbd5e1; text-align: center; margin-bottom: 6px;">Explore 300 years of book trade regulations, Jesuit influence, and censorship networks across the HRE (1500–1800).</p>
+                        <div style="display: flex; gap: 8px; align-items: flex-start;">
+                            <span style="color: #38bdf8; font-weight: bold;">✦</span>
+                            <span><strong>Select:</strong> Click any city marker on the Map, or actor node (Censor/Publisher) in the Network to view detailed history.</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: flex-start;">
+                            <span style="color: #38bdf8; font-weight: bold;">✦</span>
+                            <span><strong>Filter:</strong> Adjust Edge Weights to reduce clutter, filter to Jesuit censors, or toggle confessional hubs.</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: flex-start;">
+                            <span style="color: #38bdf8; font-weight: bold;">✦</span>
+                            <span><strong>Search:</strong> Use the search bar in the controls panel to locate specific actors directly.</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="info-content hidden" id="info-content">
                     <div class="info-section hidden" id="section-city-image" style="margin-bottom: 12px;">
@@ -162,9 +189,21 @@
                     </div>
                     <div id="network-container" class="viz-container">
                         <div class="loading-overlay" id="network-loading">
-                            <div class="spinner"></div>
-                            <p>Loading network graph...</p>
+                            <div class="loading-ink-splatter top-left"></div>
+                            <div class="loading-ink-splatter bottom-right"></div>
+                            <model-viewer 
+                                src="assets/glb/printing_press.glb" 
+                                auto-rotate 
+                                camera-controls 
+                                shadow-intensity="1.5"
+                                style="width: 260px; height: 260px; background: transparent; margin-bottom: 10px;"
+                                class="loader-3d-model">
+                            </model-viewer>
+                            <h3 class="loading-title">Vetting the Holy Roman Empire</h3>
+                            <p class="loading-desc">Loading censorship records & actor network graph...</p>
+                            <div class="spinner" style="margin-top: 15px;"></div>
                         </div>
+                        <svg id="network-svg" width="100%" height="100%"></svg>
                     </div>
                 </div>
                 
@@ -271,6 +310,6 @@
     <div id="network-tooltip" class="network-tooltip hidden"></div>
     
     <!-- Custom JS Application Logic -->
-    <script src="app.js"></script>
+    <script src="app.js?v=2"></script>
 </body>
 </html>

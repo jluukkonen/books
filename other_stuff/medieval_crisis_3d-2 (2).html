@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medieval Crisis — 3D Concept Visualizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0c0a; --surface: #161410;
+    --border: rgba(255,220,140,0.12); --gold: #c8a84b; --gold-dim: rgba(200,168,75,0.3);
+    --text: #e8dfc8; --text-dim: #8a7d62;
+    --political: #9b8fe8; --economic: #4db88a; --religious: #e07050;
+    --military: #5b9fdd; --social: #d4923a;
+  }
+  body { background:var(--bg); color:var(--text); font-family:'EB Garamond',serif; min-height:100vh; display:flex; flex-direction:column; overflow-x:hidden; }
+
+  header { padding:24px 36px 18px; border-bottom:0.5px solid var(--border); display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+  header h1 { font-family:'Cinzel',serif; font-size:20px; font-weight:600; letter-spacing:0.08em; color:var(--gold); }
+  header p  { font-size:13px; color:var(--text-dim); font-style:italic; }
+
+  .controls { padding:14px 36px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; border-bottom:0.5px solid var(--border); }
+  .ctrl-label { font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:var(--text-dim); text-transform:uppercase; margin-right:2px; }
+  button.cbtn { background:transparent; border:0.5px solid rgba(200,168,75,0.3); border-radius:3px; padding:5px 14px; font-family:'EB Garamond',serif; font-size:13px; color:var(--text-dim); cursor:pointer; transition:all 0.2s; }
+  button.cbtn:hover { border-color:var(--gold); color:var(--text); }
+  button.cbtn.on    { border-color:var(--gold); color:var(--gold); background:rgba(200,168,75,0.06); }
+  .hint { margin-left:auto; font-size:12px; color:var(--text-dim); font-style:italic; }
+
+  .main { flex:1; display:flex; }
+  #wrap { flex:1; position:relative; min-height:560px; }
+  canvas { display:block; width:100%; height:100%; cursor:grab; }
+  canvas:active { cursor:grabbing; }
+
+  #tooltip { position:absolute; background:rgba(13,12,10,0.96); border:0.5px solid var(--gold-dim); border-radius:4px; padding:11px 15px; font-size:13px; pointer-events:none; display:none; min-width:155px; line-height:2; }
+  #tooltip strong { font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.12em; color:var(--gold); display:block; margin-bottom:3px; text-transform:uppercase; }
+
+  .sidebar { width:210px; border-left:0.5px solid var(--border); padding:24px 18px; display:flex; flex-direction:column; gap:22px; overflow-y:auto; }
+  .sidebar h3 { font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.15em; color:var(--text-dim); text-transform:uppercase; margin-bottom:10px; }
+
+  .axis-item { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-dim); margin-bottom:7px; cursor:pointer; transition:color 0.2s; user-select:none; }
+  .axis-item:hover { color:var(--text); }
+  .axis-item.muted { opacity:0.28; }
+  .axis-dot { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+
+  /* Slice toggle list */
+  .slice-list { display:flex; flex-direction:column; gap:4px; }
+  .slice-btn {
+    background:transparent; border:0.5px solid rgba(200,168,75,0.18); border-radius:3px;
+    padding:4px 8px; font-family:'EB Garamond',serif; font-size:12px; color:var(--text-dim);
+    cursor:pointer; text-align:left; transition:all 0.15s; display:flex; align-items:center; gap:6px;
+  }
+  .slice-btn:hover { border-color:var(--gold-dim); color:var(--text); }
+  .slice-btn.selected { border-color:var(--gold); color:var(--gold); background:rgba(200,168,75,0.08); }
+  .slice-btn.hidden   { opacity:0.25; }
+  .slice-btn .vis-dot { width:6px; height:6px; border-radius:50%; background:var(--gold); flex-shrink:0; transition:opacity 0.15s; }
+  .slice-btn.hidden .vis-dot { opacity:0; }
+
+  .btn-row { display:flex; gap:6px; }
+  .sm-btn { flex:1; background:transparent; border:0.5px solid var(--border); border-radius:3px; color:var(--text-dim); font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; padding:6px 4px; cursor:pointer; text-transform:uppercase; transition:all 0.15s; }
+  .sm-btn:hover { border-color:var(--gold); color:var(--gold); }
+
+  .zoom-row { display:flex; gap:6px; }
+  .zoom-row button { flex:1; background:transparent; border:0.5px solid var(--border); border-radius:3px; color:var(--text-dim); font-size:17px; padding:4px; cursor:pointer; line-height:1; transition:all 0.15s; }
+  .zoom-row button:hover { border-color:var(--gold); color:var(--gold); }
+
+  #selected-panel { background:rgba(200,168,75,0.04); border:0.5px solid var(--gold-dim); border-radius:4px; padding:12px 14px; display:none; }
+  #selected-panel h4 { font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.12em; color:var(--gold); text-transform:uppercase; margin-bottom:8px; }
+  .sp-row { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-dim); margin-bottom:4px; }
+  .sp-val { font-size:13px; color:var(--text); }
+  .sp-bar-wrap { width:60px; height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; }
+  .sp-bar { height:100%; border-radius:2px; }
+
+  footer { padding:12px 36px; border-top:0.5px solid var(--border); display:flex; gap:18px; flex-wrap:wrap; align-items:center; }
+  .leg { display:flex; align-items:center; gap:5px; font-size:12px; color:var(--text-dim); }
+  .leg-dot { width:8px; height:8px; border-radius:2px; }
+
+  @media(max-width:640px){ .sidebar{display:none;} header,.controls,footer{padding-left:14px;padding-right:14px;} }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Medieval Crisis &mdash; 3D Concept Prism</h1>
+  <p>Conceptual dimensions of "crisis" across 50-year periods, 900–1500 CE</p>
+</header>
+
+<div class="controls">
+  <span class="ctrl-label">Region</span>
+  <button class="cbtn on" onclick="pick(this,'France')">France</button>
+  <button class="cbtn" onclick="pick(this,'England')">England</button>
+  <button class="cbtn" onclick="pick(this,'HRE')">Holy Roman Empire</button>
+  <button class="cbtn" onclick="pick(this,'Iberia')">Iberia</button>
+  <span class="hint">Drag to rotate &middot; scroll to zoom &middot; click a slice</span>
+</div>
+
+<div class="main">
+  <div id="wrap">
+    <canvas id="cv"></canvas>
+    <div id="tooltip"></div>
+  </div>
+
+  <aside class="sidebar">
+
+    <!-- Selected slice detail panel -->
+    <div id="selected-panel">
+      <h4 id="sp-title">—</h4>
+      <div id="sp-rows"></div>
+      <button class="sm-btn" style="width:100%;margin-top:8px;" onclick="clearSelection()">Clear selection</button>
+    </div>
+
+    <!-- Dimensions toggle -->
+    <div>
+      <h3>Dimensions</h3>
+      <div class="axis-item" onclick="toggleAxis(this,0)"><span class="axis-dot" style="background:var(--political)"></span>Political</div>
+      <div class="axis-item" onclick="toggleAxis(this,1)"><span class="axis-dot" style="background:var(--economic)"></span>Economic</div>
+      <div class="axis-item" onclick="toggleAxis(this,2)"><span class="axis-dot" style="background:var(--religious)"></span>Religious</div>
+      <div class="axis-item" onclick="toggleAxis(this,3)"><span class="axis-dot" style="background:var(--military)"></span>Military</div>
+      <div class="axis-item" onclick="toggleAxis(this,4)"><span class="axis-dot" style="background:var(--social)"></span>Social</div>
+    </div>
+
+    <!-- Time slices toggle -->
+    <div>
+      <h3>Time slices</h3>
+      <div class="btn-row" style="margin-bottom:8px;">
+        <button class="sm-btn" onclick="setAllSlices(true)">Show all</button>
+        <button class="sm-btn" onclick="setAllSlices(false)">Hide all</button>
+      </div>
+      <div class="slice-list" id="slice-list"></div>
+    </div>
+
+    <!-- View -->
+    <div>
+      <h3>View</h3>
+      <div class="zoom-row"><button onclick="zoomBy(1.15)">+</button><button onclick="zoomBy(1/1.15)">−</button></div>
+      <button class="sm-btn" style="width:100%;margin-top:8px;" onclick="resetView()">Reset view</button>
+    </div>
+
+    <p style="font-size:11px;color:var(--text-dim);font-style:italic;line-height:1.7;">
+      Click a slice to inspect it. Toggle slices on/off to thin the prism. Toggle dimensions to isolate walls.
+    </p>
+
+  </aside>
+</div>
+
+<footer>
+  <span class="leg"><span class="leg-dot" style="background:var(--political)"></span>Political</span>
+  <span class="leg"><span class="leg-dot" style="background:var(--economic)"></span>Economic</span>
+  <span class="leg"><span class="leg-dot" style="background:var(--religious)"></span>Religious</span>
+  <span class="leg"><span class="leg-dot" style="background:var(--military)"></span>Military</span>
+  <span class="leg"><span class="leg-dot" style="background:var(--social)"></span>Social</span>
+  <span style="margin-left:auto;font-size:11px;color:var(--text-dim);font-style:italic;">Replace DATA object with your corpus values (0.0–1.0)</span>
+</footer>
+
+<script>
+const AXES    = ['Political','Economic','Religious','Military','Social'];
+const ACOLS   = ['#9b8fe8','#4db88a','#e07050','#5b9fdd','#d4923a'];
+const FILLS   = ['rgba(155,143,232,','rgba(77,184,138,','rgba(224,112,80,','rgba(91,159,221,','rgba(212,146,58,'];
+const PERIODS = ['900–950','950–1000','1000–1050','1050–1100','1100–1150','1150–1200',
+                 '1200–1250','1250–1300','1300–1350','1350–1400','1400–1450','1450–1500'];
+
+/* ── DATA ─────────────────────────────────────────────────────────────────
+   Each row = [Political, Economic, Religious, Military, Social] for one
+   50-year slice. Values 0.0–1.0 (normalised salience from your corpus).
+   ───────────────────────────────────────────────────────────────────────── */
+const DATA = {
+  France:  [[.4,.5,.3,.6,.4],[.3,.6,.4,.5,.3],[.5,.4,.7,.6,.5],[.7,.5,.8,.8,.6],
+            [.6,.6,.7,.7,.5],[.7,.5,.6,.8,.6],[.8,.6,.7,.9,.7],[.6,.7,.6,.7,.6],
+            [.9,.9,.7,.9,.9],[.9,.8,.6,.8,.9],[.7,.7,.5,.7,.7],[.6,.6,.5,.6,.6]],
+  England: [[.5,.4,.4,.5,.3],[.6,.5,.5,.6,.4],[.7,.5,.6,.9,.6],[.9,.6,.7,.9,.7],
+            [.7,.6,.6,.8,.6],[.8,.7,.6,.7,.7],[.6,.6,.5,.6,.5],[.7,.7,.6,.7,.7],
+            [.8,.9,.6,.8,.9],[.9,.8,.5,.7,.9],[.8,.7,.5,.8,.8],[.7,.7,.6,.8,.7]],
+  HRE:     [[.6,.4,.5,.5,.4],[.5,.5,.6,.4,.4],[.7,.4,.9,.6,.5],[.9,.5,.9,.7,.7],
+            [.8,.6,.8,.7,.6],[.7,.6,.7,.6,.6],[.8,.5,.7,.7,.7],[.7,.6,.6,.6,.6],
+            [.8,.8,.7,.7,.8],[.7,.7,.6,.6,.8],[.8,.6,.6,.7,.7],[.7,.7,.7,.8,.7]],
+  Iberia:  [[.5,.3,.7,.6,.4],[.5,.4,.8,.7,.4],[.6,.5,.9,.8,.5],[.7,.6,.9,.9,.6],
+            [.6,.6,.8,.8,.6],[.7,.6,.8,.8,.6],[.7,.5,.7,.7,.6],[.6,.6,.7,.6,.6],
+            [.8,.8,.7,.7,.8],[.7,.8,.6,.6,.8],[.7,.7,.8,.8,.7],[.8,.8,.9,.9,.7]]
+};
+
+let country      = 'France';
+let rotX = 0.38, rotY = -0.5, zoom = 1;
+let dragging     = false, mx0, my0, rx0, ry0;
+let axisVisible  = [true,true,true,true,true];
+let sliceVisible = Array(PERIODS.length).fill(true);
+let selectedSlice = null;  // null = none selected
+
+const cv  = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let W, H;
+
+// Build slice toggle buttons
+function buildSliceList(){
+  const list = document.getElementById('slice-list');
+  list.innerHTML = '';
+  PERIODS.forEach((p, si) => {
+    const btn = document.createElement('button');
+    btn.className = 'slice-btn' + (sliceVisible[si] ? '' : ' hidden');
+    btn.id = 'sbtn-' + si;
+    btn.innerHTML = `<span class="vis-dot"></span>${p}`;
+    btn.onclick = () => toggleSlice(si);
+    list.appendChild(btn);
+  });
+}
+
+function toggleSlice(si){
+  sliceVisible[si] = !sliceVisible[si];
+  document.getElementById('sbtn-'+si).classList.toggle('hidden', !sliceVisible[si]);
+  if(!sliceVisible[si] && selectedSlice === si) clearSelection();
+  draw();
+}
+
+function setAllSlices(val){
+  sliceVisible = Array(PERIODS.length).fill(val);
+  PERIODS.forEach((_,si) => {
+    const btn = document.getElementById('sbtn-'+si);
+    if(btn) btn.classList.toggle('hidden', !val);
+  });
+  if(!val) clearSelection();
+  draw();
+}
+
+function selectSlice(si){
+  selectedSlice = (selectedSlice === si) ? null : si;
+  PERIODS.forEach((_,i)=>{
+    const btn = document.getElementById('sbtn-'+i);
+    if(btn) btn.classList.toggle('selected', i === selectedSlice);
+  });
+  updateSelectedPanel();
+  draw();
+}
+
+function clearSelection(){
+  selectedSlice = null;
+  PERIODS.forEach((_,i)=>{
+    const btn = document.getElementById('sbtn-'+i);
+    if(btn) btn.classList.remove('selected');
+  });
+  updateSelectedPanel();
+  draw();
+}
+
+function updateSelectedPanel(){
+  const panel = document.getElementById('selected-panel');
+  if(selectedSlice === null){ panel.style.display='none'; return; }
+  panel.style.display = 'block';
+  document.getElementById('sp-title').textContent = PERIODS[selectedSlice];
+  const vals = DATA[country][selectedSlice];
+  document.getElementById('sp-rows').innerHTML = AXES.map((a,i)=>`
+    <div class="sp-row">
+      <span style="color:${ACOLS[i]}">${a}</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div class="sp-bar-wrap"><div class="sp-bar" style="width:${Math.round(vals[i]*100)}%;background:${ACOLS[i]}"></div></div>
+        <span class="sp-val">${Math.round(vals[i]*100)}%</span>
+      </div>
+    </div>`).join('');
+}
+
+// ── 3D projection ──────────────────────────────────────────────────────────
+function resize(){
+  const r = cv.parentElement.getBoundingClientRect();
+  W = cv.width  = r.width  * devicePixelRatio;
+  H = cv.height = r.height * devicePixelRatio;
+  cv.style.width = r.width+'px'; cv.style.height = r.height+'px';
+  draw();
+}
+
+function proj(x,y,z){
+  const cy=Math.cos(rotY),sy=Math.sin(rotY);
+  const cx=Math.cos(rotX),sx=Math.sin(rotX);
+  const x1=cy*x+sy*z, z1=-sy*x+cy*z;
+  const y1=cx*y-sx*z1, z2=sx*y+cx*z1;
+  const fov=5*zoom, sc=W*0.36/(fov+z2);
+  return [W/2+x1*sc, H/2-y1*sc, sc, z2];
+}
+
+function axisAngle(ai){ return (ai/AXES.length)*Math.PI*2 - Math.PI/2; }
+
+function slicePts(vals,R,yOff){
+  return vals.map((v,i)=>{
+    const a=axisAngle(i);
+    return [Math.cos(a)*v*R, yOff, Math.sin(a)*v*R];
+  });
+}
+
+// Map visible slice indices to a compact y-axis (so gaps left by hidden slices close up)
+function visibleYMap(){
+  const data = DATA[country];
+  const visIdx = PERIODS.map((_,i)=>i).filter(i=>sliceVisible[i]);
+  const N = visIdx.length;
+  const gap = 0.52, baseY = -(N-1)*gap/2;
+  const map = {}; // originalIndex -> yOff
+  visIdx.forEach((si,rank) => { map[si] = baseY + rank*gap; });
+  return {map, visIdx, gap, baseY, N};
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  const data = DATA[country];
+  const {map, visIdx, gap, N} = visibleYMap();
+  if(N === 0) return;
+  const R = 1.9;
+  const gridCol   = 'rgba(255,220,140,0.07)';
+  const labelCol  = 'rgba(232,223,200,0.4)';
+
+  // Precompute projected points for visible slices
+  const allProj = {};
+  visIdx.forEach(si => {
+    allProj[si] = slicePts(data[si],R,map[si]).map(p=>proj(p[0],p[1],p[2]));
+  });
+
+  const faces = [];
+
+  // lateral quad walls between consecutive visible slices
+  for(let ri=0; ri<visIdx.length-1; ri++){
+    const si  = visIdx[ri];
+    const si2 = visIdx[ri+1];
+    for(let ai=0; ai<AXES.length; ai++){
+      if(!axisVisible[ai] && !axisVisible[(ai+1)%AXES.length]) continue;
+      const ai2=(ai+1)%AXES.length;
+      const p00=allProj[si][ai],   p01=allProj[si][ai2];
+      const p10=allProj[si2][ai],  p11=allProj[si2][ai2];
+      const zAvg=(p00[3]+p01[3]+p10[3]+p11[3])/4;
+      // dimming: if a slice is selected, non-adjacent walls are faded
+      const adjacent = (selectedSlice===null || selectedSlice===si || selectedSlice===si2);
+      faces.push({type:'quad', pts:[p00,p01,p11,p10], ai, si, zAvg, adjacent});
+    }
+  }
+
+  // spider face per visible slice
+  visIdx.forEach(si => {
+    const pts=allProj[si];
+    const zAvg=pts.reduce((s,p)=>s+p[3],0)/pts.length;
+    const isSelected = selectedSlice===si;
+    const dimmed = selectedSlice!==null && !isSelected;
+    faces.push({type:'spider', pts, si, zAvg, isSelected, dimmed});
+  });
+
+  faces.sort((a,b)=>b.zAvg-a.zAvg);
+
+  for(const f of faces){
+    if(f.type==='quad'){
+      const [p00,p01,p11,p10]=f.pts;
+      ctx.beginPath();
+      ctx.moveTo(p00[0],p00[1]); ctx.lineTo(p01[0],p01[1]);
+      ctx.lineTo(p11[0],p11[1]); ctx.lineTo(p10[0],p10[1]);
+      ctx.closePath();
+      const alpha = f.adjacent ? (axisVisible[f.ai] ? 0.2 : 0.04) : 0.05;
+      ctx.fillStyle   = FILLS[f.ai]+alpha+')';
+      ctx.fill();
+      const strokeA = f.adjacent ? (axisVisible[f.ai] ? 'bb' : '22') : '22';
+      ctx.strokeStyle = ACOLS[f.ai]+strokeA;
+      ctx.lineWidth=1; ctx.stroke();
+
+    } else if(f.type==='spider'){
+      const {pts,si,isSelected,dimmed}=f;
+      const yOff=map[si];
+      const baseAlpha = dimmed ? 0.15 : 1;
+
+      // grid rings
+      for(let ri=1;ri<=3;ri++){
+        const rr=ri/3;
+        const rpts=[];
+        for(let i=0;i<=48;i++){
+          const a=(i/48)*Math.PI*2;
+          rpts.push(proj(Math.cos(a)*R*rr,yOff,Math.sin(a)*R*rr));
+        }
+        ctx.beginPath();
+        rpts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));
+        ctx.strokeStyle=`rgba(255,220,140,${0.07*baseAlpha})`; ctx.lineWidth=0.5; ctx.stroke();
+      }
+
+      // spokes
+      for(let ai=0;ai<AXES.length;ai++){
+        const c=proj(0,yOff,0), t=pts[ai];
+        ctx.beginPath(); ctx.moveTo(c[0],c[1]); ctx.lineTo(t[0],t[1]);
+        ctx.strokeStyle=`rgba(255,220,140,${0.07*baseAlpha})`; ctx.lineWidth=0.5; ctx.stroke();
+      }
+
+      // filled spider
+      ctx.beginPath();
+      pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));
+      ctx.closePath();
+      if(isSelected){
+        ctx.fillStyle='rgba(200,168,75,0.22)';
+        ctx.strokeStyle='rgba(200,168,75,0.9)';
+        ctx.lineWidth=2;
+      } else {
+        ctx.fillStyle=`rgba(200,168,75,${0.07*baseAlpha})`;
+        ctx.strokeStyle=`rgba(200,168,75,${0.55*baseAlpha})`;
+        ctx.lineWidth=1;
+      }
+      ctx.fill(); ctx.stroke();
+
+      // axis dots
+      pts.forEach((p,ai)=>{
+        if(!axisVisible[ai]) return;
+        ctx.beginPath(); ctx.arc(p[0],p[1],3*devicePixelRatio,0,Math.PI*2);
+        ctx.fillStyle = isSelected ? ACOLS[ai] : ACOLS[ai]+(dimmed?'44':'cc');
+        ctx.fill();
+      });
+
+      // period label
+      const lp=proj(R+0.3,yOff,0);
+      ctx.font=`${Math.round(10.5*devicePixelRatio)}px 'EB Garamond',serif`;
+      ctx.fillStyle=isSelected?'rgba(200,168,75,0.9)':`rgba(232,223,200,${0.42*baseAlpha})`;
+      ctx.textAlign='left';
+      if(isSelected){
+        ctx.font=`500 ${Math.round(11*devicePixelRatio)}px 'Cinzel',serif`;
+      }
+      ctx.fillText(PERIODS[si], lp[0], lp[1]+4);
+    }
+  }
+
+  // vertical ridge lines per axis
+  for(let ai=0;ai<AXES.length;ai++){
+    if(!axisVisible[ai]) continue;
+    ctx.beginPath();
+    visIdx.forEach((si,ri)=>{
+      const p=allProj[si][ai];
+      ri===0?ctx.moveTo(p[0],p[1]):ctx.lineTo(p[0],p[1]);
+    });
+    ctx.strokeStyle=ACOLS[ai]+(selectedSlice===null?'cc':'55');
+    ctx.lineWidth=1.5; ctx.stroke();
+
+    visIdx.forEach(si=>{
+      const p=allProj[si][ai];
+      const isSel = selectedSlice===si;
+      ctx.beginPath(); ctx.arc(p[0],p[1],isSel?4*devicePixelRatio:2.5*devicePixelRatio,0,Math.PI*2);
+      ctx.fillStyle=ACOLS[ai]+(selectedSlice===null||isSel?'':'55');
+      ctx.fill();
+    });
+  }
+
+  // axis labels above topmost visible slice
+  const topSi = visIdx[visIdx.length-1];
+  for(let ai=0;ai<AXES.length;ai++){
+    if(!axisVisible[ai]) continue;
+    const a=axisAngle(ai), yOff=map[topSi];
+    const lp=proj(Math.cos(a)*(R+0.48),yOff,Math.sin(a)*(R+0.48));
+    ctx.font=`600 ${Math.round(11*devicePixelRatio)}px 'Cinzel',serif`;
+    ctx.fillStyle=ACOLS[ai]; ctx.textAlign='center';
+    ctx.fillText(AXES[ai],lp[0],lp[1]);
+  }
+}
+
+// Click to select a slice
+cv.addEventListener('click', e=>{
+  if(Math.abs(e.clientX-mx0)>4 || Math.abs(e.clientY-my0)>4) return; // was a drag
+  const rect=cv.getBoundingClientRect();
+  const px=(e.clientX-rect.left)*devicePixelRatio;
+  const py=(e.clientY-rect.top)*devicePixelRatio;
+  const data=DATA[country];
+  const {map,visIdx}=visibleYMap();
+  const R=1.9;
+  let best=null, bestD=36*devicePixelRatio;
+  visIdx.forEach(si=>{
+    const pts=slicePts(data[si],R,map[si]).map(p=>proj(p[0],p[1],p[2]));
+    const cx=pts.reduce((s,p)=>s+p[0],0)/pts.length;
+    const cy=pts.reduce((s,p)=>s+p[1],0)/pts.length;
+    const d=Math.hypot(px-cx,py-cy);
+    if(d<bestD){bestD=d;best=si;}
+  });
+  if(best!==null) selectSlice(best);
+});
+
+// Hover tooltip
+cv.addEventListener('mousemove', e=>{
+  if(dragging){
+    rotY=ry0+(e.clientX-mx0)*0.012;
+    rotX=rx0+(e.clientY-my0)*0.012;
+    rotX=Math.max(-1.1,Math.min(1.1,rotX));
+    draw(); return;
+  }
+  const rect=cv.getBoundingClientRect();
+  const px=(e.clientX-rect.left)*devicePixelRatio;
+  const py=(e.clientY-rect.top)*devicePixelRatio;
+  const data=DATA[country];
+  const {map,visIdx}=visibleYMap();
+  const R=1.9;
+  let best=null, bestD=28*devicePixelRatio;
+  visIdx.forEach(si=>{
+    const pts=slicePts(data[si],R,map[si]).map(p=>proj(p[0],p[1],p[2]));
+    const cx=pts.reduce((s,p)=>s+p[0],0)/pts.length;
+    const cy=pts.reduce((s,p)=>s+p[1],0)/pts.length;
+    const d=Math.hypot(px-cx,py-cy);
+    if(d<bestD){bestD=d;best={si,vals:data[si]};}
+  });
+  const tt=document.getElementById('tooltip');
+  if(best){
+    tt.style.display='block';
+    tt.style.left=(e.clientX-rect.left+16)+'px';
+    tt.style.top=(e.clientY-rect.top-8)+'px';
+    tt.innerHTML=`<strong>${PERIODS[best.si]}</strong>`+
+      AXES.map((a,i)=>`<span style="color:${ACOLS[i]}">${a}</span>: ${Math.round(best.vals[i]*100)}%`).join('<br>');
+  } else { tt.style.display='none'; }
+});
+
+cv.addEventListener('mouseleave',()=>document.getElementById('tooltip').style.display='none');
+cv.addEventListener('mousedown',e=>{dragging=true;mx0=e.clientX;my0=e.clientY;rx0=rotX;ry0=rotY;});
+window.addEventListener('mouseup',()=>{dragging=false;});
+cv.addEventListener('wheel',e=>{
+  e.preventDefault();
+  zoom*=1+e.deltaY*0.001;
+  zoom=Math.max(0.3,Math.min(4,zoom));
+  draw();
+},{passive:false});
+
+let lt=null,lrx,lry;
+cv.addEventListener('touchstart',e=>{lt={x:e.touches[0].clientX,y:e.touches[0].clientY};lrx=rotX;lry=rotY;});
+cv.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(!lt)return;
+  rotY=lry+(e.touches[0].clientX-lt.x)*0.015;
+  rotX=lrx+(e.touches[0].clientY-lt.y)*0.015;
+  rotX=Math.max(-1.1,Math.min(1.1,rotX));
+  draw();
+},{passive:false});
+
+window.pick=function(btn,c){
+  document.querySelectorAll('.cbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); country=c;
+  clearSelection(); updateSelectedPanel(); draw();
+};
+window.toggleAxis=function(el,ai){
+  axisVisible[ai]=!axisVisible[ai];
+  el.classList.toggle('muted',!axisVisible[ai]); draw();
+};
+window.zoomBy=function(f){ zoom=Math.max(0.3,Math.min(4,zoom*f)); draw(); };
+window.resetView=function(){ rotX=0.38; rotY=-0.5; zoom=1; draw(); };
+
+window.addEventListener('resize',resize);
+buildSliceList();
+resize();
+</script>
+</body>
+</html>
