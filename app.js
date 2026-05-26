@@ -1964,7 +1964,7 @@ function initTeamCabinet() {
         const card = document.createElement('div');
         card.className = 'team-card';
         card.innerHTML = `
-            <div class="coin-viewer-wrapper">
+            <div class="coin-viewer-wrapper" title="Click to flip the coin!">
                 <model-viewer 
                     src="${member.model}" 
                     auto-rotate 
@@ -1980,6 +1980,16 @@ function initTeamCabinet() {
             <div class="team-role">${member.role}</div>
             <p class="team-bio">${member.bio}</p>
         `;
+        
+        const wrapper = card.querySelector('.coin-viewer-wrapper');
+        wrapper.addEventListener('click', () => {
+            if (wrapper.classList.contains('flipping')) return;
+            wrapper.classList.add('flipping');
+            setTimeout(() => {
+                wrapper.classList.remove('flipping');
+            }, 1000);
+        });
+        
         grid.appendChild(card);
     });
 }
