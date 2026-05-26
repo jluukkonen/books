@@ -83,6 +83,16 @@ body {
     box-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
 }
 
+.brand-logo-3d {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+    background: transparent;
+    flex-shrink: 0;
+}
+
 .brand h1 {
     font-family: 'Outfit', sans-serif;
     font-size: 22px;
