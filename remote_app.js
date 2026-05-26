@@ -604,6 +604,52 @@ function updateInfoPanel(node) {
             actorTimelineSection.classList.add('hidden');
         }
     }
+    
+    // Show and render actor connections list
+    const connSection = document.getElementById('section-connections');
+    const connList = document.getElementById('info-connections-list');
+    if (connSection && connList && state.networkData) {
+        connSection.classList.remove('hidden');
+        connList.innerHTML = '';
+        
+        // Find all links related to this node in networkData
+        const allLinks = state.networkData.links.filter(l => {
+            const sId = typeof l.source === 'object' ? l.source.id : l.source;
+            const tId = typeof l.target === 'object' ? l.target.id : l.target;
+            return sId === node.id || tId === node.id;
+        });
+        
+        // Map to structured partners list
+        const partners = allLinks.map(l => {
+            const sId = typeof l.source === 'object' ? l.source.id : l.source;
+            const tId = typeof l.target === 'object' ? l.target.id : l.target;
+            const partnerId = sId === node.id ? tId : sId;
+            const partnerNode = state.networkData.nodes.find(n => n.id === partnerId);
+            return {
+                id: partnerId,
+                city: partnerNode ? (getNodeCity(partnerNode) || 'Unknown') : 'Unknown',
+                weight: l.weight,
+                isVisible: l.weight >= state.networkThreshold
+            };
+        });
+        
+        // Sort by weight descending
+        partners.sort((a, b) => b.weight - a.weight);
+        
+        // Render list items
+        partners.forEach(p => {
+            const li = document.createElement('li');
+            li.className = `connection-item ${p.isVisible ? '' : 'low-weight-link'}`;
+            li.innerHTML = `
+                <div>
+                    <span class="connection-partner">${p.id}</span>
+                    <span class="connection-city">(${p.city})</span>
+                </div>
+                <span class="connection-weight">${p.weight} ${p.weight === 1 ? 'book' : 'books'}</span>
+            `;
+            connList.appendChild(li);
+        });
+    }
 }
 
 // Reset all panels
@@ -616,6 +662,10 @@ function resetVisualization() {
     document.getElementById('info-placeholder').classList.remove('hidden');
     document.getElementById('info-content').classList.add('hidden');
     document.getElementById('section-map-actions').classList.add('hidden');
+    
+    // Hide connections section
+    const connSection = document.getElementById('section-connections');
+    if (connSection) connSection.classList.add('hidden');
     
     // Hide 3D view
     const modelViewer = document.getElementById('sidebar-3d');
@@ -1292,6 +1342,9 @@ function updateMapMarkers() {
                         state.charts.actorTimeline.destroy();
                         state.charts.actorTimeline = null;
                     }
+                    
+                    const connSection = document.getElementById('section-connections');
+                    if (connSection) connSection.classList.add('hidden');
                     
                     const cityAssetMap = {
                         "Leipzig": "leipzig",

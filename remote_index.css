@@ -1265,6 +1265,81 @@ input[type="range"]::-moz-range-progress {
     filter: url(#glow-jesuit);
 }
 
+/* Connections List in Sidebar details */
+.connections-list {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 180px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* Custom Scrollbar for connections list */
+.connections-list::-webkit-scrollbar {
+    width: 4px;
+}
+.connections-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+}
+.connections-list::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.3);
+    border-radius: 2px;
+}
+
+.connection-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    padding: 6px 8px;
+    background: rgba(30, 41, 59, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+    color: #e2e8f0;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.connection-item:hover {
+    background: rgba(56, 189, 248, 0.08);
+    border-color: rgba(56, 189, 248, 0.2);
+}
+
+.connection-partner {
+    font-weight: 500;
+}
+
+.connection-city {
+    color: #94a3b8;
+    font-style: italic;
+    margin-left: 4px;
+}
+
+.connection-weight {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.connection-item.low-weight-link {
+    opacity: 0.55;
+    background: rgba(15, 23, 42, 0.2);
+}
+
+.connection-item.low-weight-link .connection-weight {
+    background: rgba(148, 163, 184, 0.1);
+    color: #94a3b8;
+    border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
 
 
 
