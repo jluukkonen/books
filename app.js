@@ -200,6 +200,17 @@ function initTabs() {
                     state.map.invalidateSize();
                 }, 100);
             }
+            
+            // Force model-viewers to resize and recalculate layout upon tab activation
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+                const viewers = document.querySelectorAll('model-viewer');
+                viewers.forEach(mv => {
+                    if (typeof mv.resize === 'function') {
+                        mv.resize();
+                    }
+                });
+            }, 100);
         });
     });
 }
