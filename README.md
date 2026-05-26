@@ -9,3 +9,6 @@ Thus, to get the project running, do the following:
 3. Install Python dependencies with `uv sync`
 
 For quick-start introductions on how to use the data in practice from code, look at [`src/jiemakel/sample_notebook.Rmd`](src/jiemakel/sample_notebook.Rmd) and[`src/jiemakel/sample_notebook.ipynb`](src/jiemakel/sample_notebook.ipynb).
+
+
+Online page: https://jluukkonen.github.io/books/
