@@ -1,0 +1,280 @@
+Level1,Level2,Level3,german_genre_term,definition
+Arts & Culture,Architecture,Architecture,Architektur,
+Arts & Culture,Art,Ornament Print,Ornamentstich,
+Arts & Culture,Art,Pattern Book,Musterbuch,"Vorlagenbücher für die verschiedensten Kunstgewerbe (Drucktypenmuster, Webmuster u.a.)"
+Arts & Culture,Music,Music Book,Musikbuch,"Musiktheoretische Werke, Instrumentenkunde etc."
+Arts & Culture,Music,Sheet Music,Musiknoten,
+Economy & Commerce,Advertising & Promotion,Advertisement,Anzeige,
+Economy & Commerce,Advertising & Promotion,Subscription Advertisement,Subskriptionsanzeige,
+Economy & Commerce,Advertising & Promotion,Book Advertisement,Bücheranzeige,
+Economy & Commerce,Financial Systems,Monetary Treatise,Geldwesen,
+Economy & Commerce,Publishing Trade,Subscriber List,Subskribentenliste,
+Economy & Commerce,Trade & Markets,Antiquarian Catalog,Antiquariatskatalog,
+Economy & Commerce,Trade & Markets,Auction Catalog,Auktionskatalog,
+Economy & Commerce,Trade & Markets,Bookseller Catalog,Buchhandelskatalog,
+Economy & Commerce,Trade & Markets,Trade Fair Catalog,Meßkatalog,
+Economy & Commerce,Trade & Markets,Trade Fair Report,Meßrelation,
+Economy & Commerce,Trade & Markets,Sale Catalog,Verkaufskatalog,
+Education & Academic Publications,Pedagogy,Pedagogy,Pädagogik,
+Education & Academic Publications,School Education,Schoolbook,Schulbuch,
+Education & Academic Publications,School Education,School Program,Schulprogramm,
+Education & Academic Publications,School Education,Primer,Fibel,
+Education & Academic Publications,School Education,Youth Non-fiction,Jugendsachbuch,
+Education & Academic Publications,School Education,Reader,Lesebuch,
+Education & Academic Publications,School Education,Arithmetic Book,Rechenbuch,
+Education & Academic Publications,University Publications,University Publication,Hochschulschrift,
+Education & Academic Publications,University Publications,Matriculation Register,Matrikel,
+Education & Academic Publications,University Publications,University Program,Universitätsprogramm,
+Education & Academic Publications,University Publications,Lecture,Vorlesung,
+Education & Academic Publications,University Publications,University Calendar,Vorlesungsverzeichnis,
+Education & Academic Publications,University Publications,Dissertation,Dissertation,
+Education & Academic Publications,University Publications,Dissertation,Dissertation:jur.,
+Education & Academic Publications,University Publications,Dissertation,Dissertation:med.,
+Education & Academic Publications,University Publications,Dissertation,Dissertation:phil.,
+Education & Academic Publications,University Publications,Dissertation,Dissertation:theol,
+Education & Academic Publications,University Publications,Dissertation,Dissertation:theol.,
+Education & Academic Publications,University Publications,Dissertation Collection,Dissertationensammlung,
+Geography & Travel,Cartography,Atlas,Atlas,
+Geography & Travel,Cartography,Map,Karte,
+Geography & Travel,Descriptive Geography,Gazetteer,Ortsverzeichnis,
+Geography & Travel,Descriptive Geography,Topography,Topographie,
+Geography & Travel,Descriptive Geography,Geography,Geographie,
+Geography & Travel,Travel,Travel Guide,Reiseführer,
+Geography & Travel,Travel,Travel Narrative,Reisebericht,
+History & Biography,Documentary / Reference,Genealogy,Genealogie,
+History & Biography,Documentary / Reference,Heraldry,Wappenbuch,
+History & Biography,Historical Narrative,Chronicle,Chronik,
+History & Biography,Historical Narrative,Classical Studies,Altertumskunde,
+History & Biography,Historical Narrative,Festival Description,Festbeschreibung,Anleitungen und Dokumente zu höfischen Festen
+History & Biography,Documentary / Reference,Historical Commentary,Kommentar: hist.,
+History & Biography,Historical Narrative,Archaeology,Archäologie,
+History & Biography,Life Writing,Biography,Biographie,
+History & Biography,Life Writing,Illustrated Biography,Porträtwerk,Zu verwenden für biographische Werke mit hohem Anteil an Porträtabbildungen der biographierten Personen
+History & Biography,Life Writing,Autobiography,Autobiographie,Literarische Darstellung des eigenen Lebens
+History & Biography,Life Writing,Biography,Biografie,
+History & Biography,Life Writing,First-person Account,Erlebnisbericht,
+History & Biography,Life Writing,Diary,Tagebuch,
+Language & Rhetoric,Language Description,Grammar,Grammatik,
+Language & Rhetoric,Reference Works,Dictionary,Wörterbuch,
+Language & Rhetoric,Reference Works,Lexicon,Lexikon,Nachschlagewerk zu einem Fachgebiet
+Language & Rhetoric,Reference Works,Phrasebook,Sprachführer,Anleitung zur Konversation in einer fremden Sprache
+Language & Rhetoric,Rhetorical Theory,Poetics,Poetik,"Dichtungslehre u.a. von den Gattungen, Formen und Techniken"
+Language & Rhetoric,Rhetorical Theory,Rhetoric,Rhetorik,Parallel zur Dichtungslehre (Poetik) entwickelte Lehre für die Prosarede
+Language & Rhetoric,Rhetorical Theory,Speech,Rede,
+Language & Rhetoric,Rhetorical Theory,Panegyric,Panegyrikos,
+Language & Rhetoric,Writing Instruction,Letter-writing Manual,Briefsteller,Anleitung zum Abfassen von Briefen mit Musterbriefen
+Language & Rhetoric,Writing Instruction,Writing Manual,Schreibmeisterbuch,Anleitung zur [Schön-]Schreibkunst
+Language & Rhetoric,Writing Instruction,Epistolography,Epistolography,
+Language & Rhetoric,Writing Instruction,Formulary,Formularsammlung,
+Law & Government,Administration,Capitulation,Kapitulation,
+Law & Government,Administration,Mandate,Mandat,
+Law & Government,Administration,Privilege,Privileg,
+Law & Government,Administration,Directive,Richtlinie,
+Law & Government,Documentary,Regesta,Regesten,Zusammenfass. Inhaltsangaben bzw. Auszüge von Urkunden und Briefen
+Law & Government,Documentary,Documentary Edition,Urkundenbuch,
+Law & Government,Legal Practice,Legal Decisions,Entscheidungssammlung,
+Law & Government,Legal Practice,Casebook,Fallsammlung,
+Law & Government,Legal Practice,Legal Commentary,Kommentar: jur.,
+Law & Government,Legal Practice,Legal Opinion Collection,Konsiliensammlung,
+Law & Government,Legal Practice,Legal Opinion,Konsilium,
+Law & Government,Legal Practice,Statutes,Satzung,
+Law & Government,Legal Practice,Legal Polemic,Streitschrift: jur.,
+Law & Government,Legal Practice,Legal Polemic,Streitschrift:jur.,
+Law & Government,Legislation,Official Publication,Amtsdruckschrift,"Alle Drucke von amtlichen Stellen [Reichstag, Fürsten, Städte etc.]"
+Law & Government,Legislation,Edict,Edikt,
+Law & Government,Legislation,Law,Gesetz,
+Law & Government,Legislation,Law Collection,Gesetzessammlung,
+Law & Government,Legislation,Decree,Verordnung,
+Law & Government,Legislation,Treaty,Vertrag,
+Literature,Commentary,Literary Commentary,Kommentar: lit.,
+Literature,Drama,Drama,Drama,
+Literature,Drama,Farce,Schwank,Farce; funny story.
+Literature,Drama,Fastnachtspiel,Fastnachtspiel,
+Literature,Drama,Comedy,Komödie,
+Literature,Drama,Martyr Drama,Märtyrerdrama,
+Literature,Drama,Play,Schauspiel,
+Literature,Drama,Tragedy,Tragödie,
+Literature,Drama,Libretto,Libretto,"Textbuch für Oper, Operette, Singspiel, Oratorium, Kantate"
+Literature,Mixed / Anthological,Anthology,Anthologie,
+Literature,Mixed / Anthological,Satire,Satire,
+Literature,Mixed / Anthological,Award-winning Work,Preisschrift,
+Literature,Mixed / Anthological,Trivial Literature,Kolportageliteratur,"Meist anonyme, auf billige Spannung und Sensation berechnete, literarisch wertlose Massenprodukte der Trivialliteratur, die durch Hausierer an anspruchsloses Publikum verkauft wurden. Zu verwenden für sensationistische Nachrichten über Katastrophen, Verbrecher und deren Hinrichtung, Wunderzeichen am Himmel und dergleichen; meistens von geringem Umfang"
+Literature,Mixed / Anthological,Trivial Literature,Trivialliteratur,
+Literature,Mixed / Anthological,Emblem Book,Emblembuch,"Sammlung von Emblemen als literarisch-graphische Mischform, deren einzelne Elemente jeweils aus drei Teilen bestehen: Überschrift (motto), Sinnbild (pictura), Text (subscriptio)"
+Literature,Mixed / Anthological,Almanac,Almanach,Zu verwenden für literarische (Musen)Almanache
+Literature,Mixed / Anthological,Erotic Literature,Erotische Literatur,
+Literature,Narrative,Novel,Roman,"Für alle Formen (höfisch-historischer R., Schelmen-R., galanter R., Schäfer-R. etc.)benutze ggf. zusätzlich: Satire, Schäferdichtung"
+Literature,Narrative,Verse Narrative,Verserzählung,"All forms of shorter epic verse writing. From U of Heidelberg: Verse narratives are usually understood to be shorter, fictional, narrative texts in bound speech."
+Literature,Narrative,Narrative Literature,Epik,Narrative writing in verse or in prose
+Literature,Narrative,Anecdote,Anekdote,
+Literature,Narrative,Epic,Epos,
+Literature,Narrative,Story Collection,Erzählsammlung,
+Literature,Narrative,Story,Erzählung,
+Literature,Narrative,Fable,Fabel,
+Literature,Narrative,Fairy Tale,Märchen,
+Literature,Narrative,Novella,Novelle,
+Literature,Narrative,Saga,Sage,"Für Volkserzählungen über Zwerge, Riesen, Heldengeschichten"
+Literature,Narrative,Popular Book,Volksbuch,
+Literature,Narrative,Popular Literature,Volksschrifttum,Volkstümliche Schriften schöngeistigen oder populärwissenschaftlichen Inhalts zur Belehrung und Unterhaltung weitester Volkskreise
+Literature,Poetry,Lyric Poetry,Lyrik,
+Literature,Poetry,Song,Lied,Lyrische Form in strophischer Gliederung mit oder ohne Melodienangabe bzw. Noten
+Literature,Poetry,Hymnal,Gesangbuch,Kirchenliedersammlung für den Gottesdient oder zur privaten Andacht
+Literature,Poetry,Pastoral Poetry,Schäferdichtung,
+Literature,Poetry,Song Collection,Liedersammlung,
+Literature,Poetry,Calligram,Figurengedicht,"Gedicht, dessen Verse durch die Druckanordnung im graphischen Satzspiegel Symbolgegenstände darstellen (Herz, Kreuz, Pyramide etc.)"
+Literature,Poetry,Hymn,Kirchenlied,
+Literature,Poetry,Ballad,Ballade,
+Literature,Poetry,Elegy,Elegie,
+Literature,Poetry,Epigram,Epigramm,
+Literature,Poetry,Epicedium,Epikedeion,
+Literature,Drama,Jesuit Drama,Jesuitendrama,
+Literature,Drama,Perioche,Perioche,Programmheft mit deutscher Inhaltsangabe eines (lateinischen) Jesuitendramas; synopsis
+Medicine & Health,Medical Practice,Surgery,Chirurgie,
+Medicine & Health,Medical Practice,Anatomy,Anatomie,
+Medicine & Health,Medical Practice,Medical Guide,Seuchenschrift,"Monographisch gefasste Werke, die den 'gemeinen Mann' über Natur und Kur von häufiger auftretenden und weiter verbreiteten Krankheiten belehrten; hier auch: Pestschriften"
+Medicine & Health,Medical Theory,Medicine,Medizin,
+Medicine & Health,Medical Theory,Chiromancy,Chiromantie,
+Medicine & Health,Medical Theory,Physiognomy,Physiognomie,
+Medicine & Health,Reference / Pharmacology,Pharmacopoeia,Arzneibuch,
+Medicine & Health,Reference / Pharmacology,Pharmacopoeia,Pharmakopöe,Zu verwenden für amtliche Arzneimittelverzeichnisse
+Medicine & Health,Specialized Medicine,Gynecology,Gynäkologie,
+Medicine & Health,Specialized Medicine,Veterinary Medicine,Tiermedizin,
+Military,Military,Warfare,Kriegskunde,
+Military,Military,Fortification,Festungsbau,
+Natural History & Agriculture,Agriculture & Rural Economy,Horticulture,Gartenbau,
+Natural History & Agriculture,Agriculture & Rural Economy,Agriculture,Landwirtschaft,
+Natural History & Agriculture,Natural History,Zoology,Zoologie,
+Natural History & Agriculture,Natural History,Botanical Book,Pflanzenbuch,
+Natural History & Agriculture,Natural History,Botany,Botanik,
+Natural History & Agriculture,Natural History,Bestiary,Tierbuch,
+Natural History & Agriculture,Practical Guides,Household Agriculture,Hausväterliteratur,"Theoretische und praktische Anleitung zur Haus- und Grundstücksverwaltung und Landwirtschaftslehre; a widespread genre of functional literature in the early modern era up until the 18th century, providing instruction on household management and addressing both practical and moral questions."
+Philosophy & Scholarly Treatises,Commentary,Review,Rezension,
+Philosophy & Scholarly Treatises,Commentary,Commentary,Kommentar,
+Philosophy & Scholarly Treatises,Introductory Works,Introduction,Einführung,
+Philosophy & Scholarly Treatises,Practical Guides,Bookbinding Instructions,Buchbinderanweisung,
+Philosophy & Scholarly Treatises,Reference / Compilation,Review Journal,Rezensionszeitschrift,
+Philosophy & Scholarly Treatises,Reference / Compilation,Illustrated Book,Bildband,
+Philosophy & Scholarly Treatises,Reference / Compilation,Plan,Plan,
+Philosophy & Scholarly Treatises,Reference / Compilation,Source,Quelle,
+Philosophy & Scholarly Treatises,Reference / Compilation,Report,Bericht,
+Philosophy & Scholarly Treatises,Reference / Compilation,Bibliography,Bibliographie,
+Philosophy & Scholarly Treatises,Reference / Compilation,Festschrift,Festschrift,
+Philosophy & Scholarly Treatises,Reference / Compilation,Concordance,Konkordanz,
+Philosophy & Scholarly Treatises,Reference / Compilation,Encyclopedia,Enzyklopädie,
+Philosophy & Scholarly Treatises,Treatise,Treatise,Traktat,"Abhandlung über ein philosophisches, geistiges, kulturelles, politisches, wissenschaftliches Problem"
+Print Forms & Ephemera,Informational / Commercial,Library Catalog,Bibliothekskatalog,
+Print Forms & Ephemera,Informational / Commercial,Itinerary,Itinerar,"Selbst. oder unselbst. erschienene Straßen-, Wegedauer- Stationsverzeichnisse"
+Print Forms & Ephemera,Informational / Commercial,Directory,Adressbuch,
+Print Forms & Ephemera,Informational / Commercial,Guide,Führer,Informational
+Print Forms & Ephemera,Informational / Commercial,Calendar,Kalender,"Verzeichnis der Tage, Wochen, Monate eines oder mehrerer Jahre, oft mit Erzählungen, Anleitungen, Rezepten etc. Die meist angehängten Prognostica und Practica werden eigens beschlagwortet: Praktik"
+Print Forms & Ephemera,Informational / Commercial,Catalog,Katalog,
+Print Forms & Ephemera,Informational / Commercial,Playbill,Theaterzettel,
+Print Forms & Ephemera,Occasional Publications,Funeral,Gelegenheitsschrift:Tod,
+Print Forms & Ephemera,Occasional Publications,Birthday,Gelegenheitsschrift:Geburtstag,
+Print Forms & Ephemera,Occasional Publications,Marriage,Gelegenheitsschrift:Hochzeit,
+Print Forms & Ephemera,Occasional Publications,General Occasion,Gelegenheitsschrift,"Writings for specific historical occasion, some of which are commissioned. Those tagged with “Tod” (death) are distinct from Leichenpredigten."
+Print Forms & Ephemera,Occasional Publications,Salutation,Gelegenheitsschrift:Begrüßung,
+Print Forms & Ephemera,Occasional Publications,Inauguration,Gelegenheitsschrift:Amtsantritt,
+Print Forms & Ephemera,Occasional Publications,New Year,Gelegenheitsschrift:Neujahr,
+Print Forms & Ephemera,Occasional Publications,Name Day,Gelegenheitsschrift:Namenstag,
+Print Forms & Ephemera,Occasional Publications,Birth,Gelegenheitsschrift:Geburt,
+Print Forms & Ephemera,Occasional Publications,Academic,Gelegenheitsschrift:Promotion,
+Print Forms & Ephemera,Occasional Publications,Invitation,Gelegenheitsschrift:Einladung,
+Print Forms & Ephemera,Occasional Publications,Departure,Gelegenheitsschrift:Abschied,
+Print Forms & Ephemera,Occasional Publications,Victory,Gelegenheitsschrift:Sieg,
+Print Forms & Ephemera,Occasional Publications,Commemoration,Gelegenheitsschrift:Gedenken,
+Print Forms & Ephemera,Occasional Publications,Peace,Gelegenheitsschrift:Friedensschluß,
+Print Forms & Ephemera,Occasional Publications,Celebration,Gelegenheitsschrift:Fest,
+Print Forms & Ephemera,Occasional Publications,Coronation,Gelegenheitsschrift:Krönung,
+Print Forms & Ephemera,Occasional Publications,Baptism,Gelegenheitsschrift:Taufe,
+Print Forms & Ephemera,Occasional Publications,Anniversary,Gelegenheitsschrift:Jubiläum,
+Print Forms & Ephemera,Occasional Publications,Inauguration,Gelegenheitsschrift:Einweihung,
+Print Forms & Ephemera,Occasional Publications,Birthday,Gelegenheitsschrift: Geburtstag,
+Print Forms & Ephemera,Occasional Publications,Conversion,Gelegenheitsschrift:Konversion,
+Print Forms & Ephemera,Occasional Publications,Visitation,Gelegenheitsschrift:Visitation,
+Print Forms & Ephemera,Publication Formats,Broadside,Einblattdruck,"Alle Drucke, die aus einem einseitig (engl.: Broadside) oder zweiseitig (engl.: Broadsheet) bedruckten Blatt bestehen"
+Print Forms & Ephemera,Publication Formats,Pamphlet,Flugschrift,"In der Funktion dem Flugblatt vergleichbar, doch wegen des Textumfangs (ca. 2-30 Seiten) und in der Regel des Quartformats zu breiterer Information (z.B. über Kriegs- oder Natureignisse, über Kometen, Wunderzeichen u.ä.) und politischer Agitation angelegt"
+Print Forms & Ephemera,Publication Formats,Periodical,Zeitschrift,
+Print Forms & Ephemera,Publication Formats,Newspaper,Zeitung,
+Print Forms & Ephemera,Publication Formats,Table,Tabelle,
+Print Forms & Ephemera,Publication Formats,Letter,Brief,Tend to be political in nature
+Print Forms & Ephemera,Publication Formats,Letter Collection,Briefsammlung,Tend to be political in nature
+Religious Literature,Devotional / Practical,Prayer,Gebet,
+Religious Literature,Devotional / Practical,Prayerbook,Gebetbuch,
+Religious Literature,Devotional / Practical,Funeral Sermon,Leichenpredigt,
+Religious Literature,Devotional / Practical,Sermon,Predigt,
+Religious Literature,Devotional / Practical,Sermon Collection,Predigtsammlung,
+Religious Literature,Devotional / Practical,Funeral Sermon Collection,Leichenpredigtsammlung,
+Religious Literature,Devotional / Practical,Ars Moriendi,Ars moriendi,"Sterbensspiegel, Trostschrift für Sterbende, Angehörige sowie für Seelsorger"
+Religious Literature,Devotional / Practical,Devotional Literature,Erbauungsliteratur,
+Religious Literature,Devotional / Practical,Freemasons' Literature,Freimaurerliteratur,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur,"Schriften über Orden bzw. von Ordensleuten, die sich als solche auf dem Titelblatt zu erkennen geben"
+Religious Literature,Institutional / Liturgical,Agenda,Agende,"Liturgisches Buch der evangelischen Kirchen, das die Ordnung des Gottesdienstes regelt"
+Religious Literature,Institutional / Liturgical,Confession Manual,Beichtspiegel,
+Religious Literature,Institutional / Liturgical,Breviary,Brevier,Wiedergabe des liturgischen Stundengebets (Offizium)
+Religious Literature,Institutional / Liturgical,Missal,Missale,
+Religious Literature,Institutional / Liturgical,Psalter,Psalter,
+Religious Literature,Institutional / Liturgical,Ritual,Rituale,Liturgisches Buch der römisch-katholischen Kirche
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Jesuiten,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Augustiner-Chorherren,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Barnabiten,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Franziskaner,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Augustiner,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Augustiner-Barfüßer,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Augustiner-Eremiten,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Benediktiner,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Dominikaner,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Kapuziner,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Karmeliter,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Kartäuser,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Minimen,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Minoriten,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Oratorianer,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Prämonstratenser,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Theatiner,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Unbeschuhte Karmeliter,
+Religious Literature,Institutional / Liturgical,Monastic Literature,Ordensliteratur:Zisterzienser,
+Religious Literature,Religious Instruction,Bible,Bibel,
+Religious Literature,Religious Instruction,Catechism,Katechismus,Manual for instruction in the religious sacraments
+Religious Literature,Religious Instruction,Judaica,Judaicum,
+Religious Literature,Religious Narrative,Legend,Legende,Edifying narrative in verse or prose about saints or miracles
+Religious Literature,Religious Narrative,Dance of Death,Totentanz,Literar. u. künstler. Darstellung der Macht u. Allgegenwart des Todes
+Religious Literature,Religious Narrative,Saints Lives,Heiligenvita,"Sterbensspiegel, Trostschrift für Sterbende, Angehörige sowie für Seelsorger; Religiöse Lebensbeschreibungen"
+Science & Mathematics,Astral Sciences,Astronomy,Astronomie,
+Science & Mathematics,Astral Sciences,Astrology,Astrologie,
+Science & Mathematics,Astral Sciences,Practica / Prognostication,Praktik,"Bezeichnung für die seit Ende des 15. Jahrhunderts aufkommenden Anhänge zu Kalendern mit Wetterregeln, Heilvorschriften, astrologischen und anderen Prophezeiungen; später auch selbständige und verbreitete Literaturgattung für untere Volksschichten. Zu verwenden auch für Prognostikon. ""Annual astrological calendars, practica and prognostications became widespread publications in Europe after the invention of printing presses in the 15th century. Using the national language instead of Latin, the language of the scientists, the motion of sun, moon and planets were explained and used to foretell weather, growth of fruit, diseases, war and misfortune. By this means astronomical knowledge became accessible to everyone capable of reading."""
+Science & Mathematics,Earth Sciences,Geology,Geologie,
+Science & Mathematics,Earth Sciences,Mining,Bergbau,
+Science & Mathematics,Earth Sciences,Mineralogy,Mineralogie,
+Science & Mathematics,Mathematical Sciences,Mathematics,Mathematik,
+Science & Mathematics,Mathematical Sciences,Geometry,Geometrie,
+Science & Mathematics,Mathematical Sciences,Statistics,Statistik,
+Science & Mathematics,Natural Philosophy,Alchemy,Alchemie,
+Science & Mathematics,Natural Philosophy,Chemistry,Chemie,
+Science & Mathematics,Physical Sciences,Physics,Physik,
+Science & Mathematics,Physical Sciences,Mechanics,Mechanik,
+Science & Mathematics,Physical Sciences,Optics,Optik,
+Science & Mathematics,Physical Sciences,Acoustics,Akustik,
+Science & Mathematics,Physical Sciences,Magnetism,Magnetismus,
+Society Ethics & Practical Life,Conduct Literature,Women’s Literature,Frauenliteratur,
+Society Ethics & Practical Life,Conduct Literature,Conduct Literature,Anstandsliteratur,
+Society Ethics & Practical Life,Conduct Literature,Mirror of Princes,Fürstenspiegel,
+Society Ethics & Practical Life,Household & Daily Life,Cookbook,Kochbuch,
+Society Ethics & Practical Life,Household & Daily Life,Adolescent Literature,Jugendbuch,Auch zu verwenden für Kinderliteratur. Nicht zu Verwenden für Schulbücher
+Society Ethics & Practical Life,Leisure & Culture,Hunting Literature,Jagdliteratur,
+Society Ethics & Practical Life,Leisure & Culture,Society Publication,Gesellschaftsschrift,
+Society Ethics & Practical Life,Leisure & Culture,Academy Publication,Akademieschrift,
+Society Ethics & Practical Life,Leisure & Culture,Game Book,Spiel,"Gesellschafts-, Gesprächs-, Karten-, Schachspiel"
+Society Ethics & Practical Life,Leisure & Culture,Rulebook,Regelsammlung,Zu verwenden für Spielanleitungen
+Society Ethics & Practical Life,Moral Reflection,Quotations Collection,Zitatensammlung,Sammlung von „scharfsinnigen Sprüchen“ aus klass. u. zeitgenöss. Autoren („Apophthegmata“)
+Society Ethics & Practical Life,Moral Reflection,Aphorism,Aphorismus,"Kurzer, prägnant formulierter Prosasatz zur Einkleidung eines eigenartigen persönlichen Gedankens, Werturteils, einer Augenblickserkenntnis oder Lebensweisheit, durch geistreichen Inhalt und individuellen Stil unterschieden vom Niveau des Sprichworts"
+Society Ethics & Practical Life,Moral Reflection,Commonplace Book,Sprichwortsammlung,"Zusammenstellung von meist durch Reim und Rhythmus gebundene lehrhafte und/oder lustige Sentenzen, Denksprüche"
+Society Ethics & Practical Life,Moral Reflection,Moral Weekly,Moralische Wochenschrift,
+Society Ethics & Practical Life,Practical Guides,Guide,Ratgeber,"Zu verwenden für praxisbezogene Einführung für Laien, soweit nicht als spezifisch handwerkliche Anleitung zu bezeichnen"
+Society Ethics & Practical Life,Practical Guides,Manual,Anleitung,
+Society Ethics & Practical Life,Practical Guides,Handbook,Handbuch,
+Theology & Religious Polemic,Commentary,Political Commentary,Kommentar: polit.,
+Theology & Religious Polemic,Commentary,Theological Commentary,Kommentar: theol.,
+Theology & Religious Polemic,Polemic,Confessional Polemic,Streitschrift,
+Theology & Religious Polemic,Polemic,Political Polemic,Streitschrift:polit.,
+Theology & Religious Polemic,Polemic,Theological Polemic,Streitschrift:theol.,
