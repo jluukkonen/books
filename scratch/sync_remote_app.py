@@ -16,6 +16,11 @@ def main():
     content = content.replace("await fetch('data/timeline.csv?v=' + Date.now());", "await fetch('data/timeline.csv');")
     content = content.replace("await fetch('data/censor_timelines.json?v=' + Date.now());", "await fetch('data/censor_timelines.json');")
     
+    # Support parallel fetching replacements (v8 update)
+    content = content.replace("fetch('data/network.json?v=' + Date.now()).then", "fetch('data/network.json').then")
+    content = content.replace("fetch('data/timeline.csv?v=' + Date.now()).then", "fetch('data/timeline.csv').then")
+    content = content.replace("fetch('data/censor_timelines.json?v=' + Date.now()).then", "fetch('data/censor_timelines.json').then")
+    
     with open(remote_app_path, 'w', encoding='utf-8') as f:
         f.write(content)
         

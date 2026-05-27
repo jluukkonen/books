@@ -10,6 +10,7 @@ const state = {
     searchQuery: '',
     isPlaying: false,
     playInterval: null,
+    teamCabinetInitialized: false, // Added to track lazy loading
     
     // Raw Datasets
     networkData: null,
@@ -124,21 +125,49 @@ document.addEventListener("DOMContentLoaded", () => {
     initTabs();
     initControls();
     loadData();
-    initTeamCabinet();
 });
+
+// Helper to wait for initial 3D models to finish loading
+function waitForModels() {
+    const models = [
+        document.querySelector('#network-loading model-viewer'),
+        document.querySelector('.brand model-viewer'),
+        document.querySelector('#info-placeholder model-viewer')
+    ].filter(m => m !== null);
+    
+    return Promise.all(models.map(model => {
+        return new Promise(resolve => {
+            if (model.loaded || !model.src) {
+                resolve();
+            } else {
+                model.addEventListener('load', () => resolve(), { once: true });
+                // Fallback timeout of 8 seconds to prevent page from getting stuck
+                setTimeout(() => resolve(), 8000);
+            }
+        });
+    }));
+}
 
 // Load resources via Fetch
 async function loadData() {
     try {
-        const netResponse = await fetch('data/network.json?v=' + Date.now());
-        state.networkData = await netResponse.json();
+        // Start fetching data files in parallel
+        const netPromise = fetch('data/network.json?v=' + Date.now()).then(r => r.json());
+        const timelinePromise = fetch('data/timeline.csv?v=' + Date.now()).then(r => r.text());
+        const censorTimelinesPromise = fetch('data/censor_timelines.json?v=' + Date.now()).then(r => r.json());
         
-        const timelineResponse = await fetch('data/timeline.csv?v=' + Date.now());
-        const csvText = await timelineResponse.text();
-        state.timelineData = parseCSV(csvText);
+        const [netData, timelineText, censorTimelinesData] = await Promise.all([
+            netPromise,
+            timelinePromise,
+            censorTimelinesPromise
+        ]);
         
-        const timelinesResponse = await fetch('data/censor_timelines.json?v=' + Date.now());
-        state.censorTimelines = await timelinesResponse.json();
+        state.networkData = netData;
+        state.timelineData = parseCSV(timelineText);
+        state.censorTimelines = censorTimelinesData;
+        
+        // Wait for the critical startup 3D models to finish loading
+        await waitForModels();
         
         // Hide loading spinner and init viz
         document.getElementById('network-loading').classList.add('hidden');
@@ -199,6 +228,14 @@ function initTabs() {
                 setTimeout(() => {
                     state.map.invalidateSize();
                 }, 100);
+            }
+            
+            // Lazy load the team cabinet when switching to the About the Team tab
+            if (targetTab === 'info-tab') {
+                if (!state.teamCabinetInitialized) {
+                    initTeamCabinet();
+                    state.teamCabinetInitialized = true;
+                }
             }
             
             // Force model-viewers to resize and recalculate layout upon tab activation
