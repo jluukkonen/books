@@ -11,13 +11,13 @@ con <- DBI::dbConnect(
   password = db_params$password
 )
 
-tbl(con, dbplyr::in_schema("books","p_year_of_publication")) |> 
+tbl(con, dbplyr::in_schema("books","all_years_of_publication")) |> 
   filter(year_of_publication>=1400, year_of_publication<=2030) |>
   count(year_of_publication) |>
   arrange(desc(n)) |>
   explain()
 
-tbl(con, dbplyr::in_schema("books","p_year_of_publication")) |> 
+tbl(con, dbplyr::in_schema("books","all_years_of_publication")) |> 
   filter(year_of_publication>=1400, year_of_publication<=2030) |>
   count(year_of_publication) |>
   arrange(desc(n))
@@ -32,8 +32,9 @@ rlang::env_coalesce(box::topenv(), common_basis)
 library(tidyverse)
 library(gghsci)
 ```
+
 ```{r}
-p_year_of_publication |>
+all_years_of_publication |>
   filter(year_of_publication>=1400, year_of_publication<=2030) |>
   count(year_of_publication) |>
   ggplot(aes(x=year_of_publication, y=n)) + 

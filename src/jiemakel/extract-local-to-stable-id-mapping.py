@@ -118,10 +118,10 @@ def extract_stable_ids(dataset: str, standard: str):
     if dataset_rows:
         all_stable_id_rows.append(nw.concat(dataset_rows))
 
-iter_datasets(extract_stable_ids)
+iter_catalogues(extract_stable_ids)
 
 if all_stable_id_rows:
-    to_parquet(
+    persist_as_s3_parquet(
         'stable_ids',
         nw.concat(all_stable_id_rows),
     )

@@ -61,7 +61,7 @@ dependencies = [
 [[packages]]
 name = "adbcflightsql"
 version = "0.23.0.9000"
-source = { repository = "https://apache.r-universe.dev/", git = "https://github.com/apache/arrow-adbc", sha = "b4f1e3e08c2413180fef4811e94d7677949da403", directory = "r/adbcflightsql" }
+source = { repository = "https://apache.r-universe.dev/", git = "https://github.com/apache/arrow-adbc", sha = "2e31786130de98c2a97dc1a604f921bd0573e3d6", directory = "r/adbcflightsql" }
 force_source = false
 dependencies = [
     "adbcdrivermanager",
@@ -117,7 +117,7 @@ dependencies = []
 
 [[packages]]
 name = "bit64"
-version = "4.8.0"
+version = "4.8.2"
 source = { repository = "https://cloud.r-project.org/" }
 force_source = false
 dependencies = [
@@ -150,7 +150,7 @@ dependencies = []
 
 [[packages]]
 name = "broom"
-version = "1.0.12"
+version = "1.0.13"
 source = { repository = "https://cloud.r-project.org/" }
 force_source = false
 dependencies = [
@@ -169,7 +169,7 @@ dependencies = [
 
 [[packages]]
 name = "bslib"
-version = "0.10.0"
+version = "0.11.0"
 source = { repository = "https://cloud.r-project.org/" }
 force_source = false
 dependencies = [
@@ -225,7 +225,7 @@ dependencies = []
 
 [[packages]]
 name = "clipr"
-version = "0.8.0"
+version = "0.8.1"
 source = { repository = "https://cloud.r-project.org/" }
 force_source = false
 dependencies = []
@@ -784,7 +784,7 @@ dependencies = []
 
 [[packages]]
 name = "openssl"
-version = "2.4.0"
+version = "2.4.1"
 source = { repository = "https://cloud.r-project.org/" }
 force_source = false
 dependencies = [
@@ -923,13 +923,13 @@ dependencies = [
 
 [[packages]]
 name = "readxl"
-version = "1.4.5"
+version = "1.5.0"
 source = { repository = "https://cloud.r-project.org/" }
 force_source = false
 dependencies = [
     "cellranger",
     { name = "tibble", requirement = "(>= 2.0.1)" },
-    { name = "cpp11", requirement = "(>= 0.4.0)" },
+    { name = "cpp11", requirement = "(>= 0.5.5)" },
     "progress",
 ]
 
