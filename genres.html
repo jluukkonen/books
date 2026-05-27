@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vetting the HRE: Print Genre Timelines (1500-1800)</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+    
+    <!-- CSS Dependencies -->
+    <link rel="stylesheet" href="index.css?v=10">
+    
+    <!-- JS Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* Genre page overrides */
+        .genre-checklist-container {
+            max-height: 280px;
+            overflow-y: auto;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-top: 6px;
+        }
+        .genre-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11.5px;
+            color: #cbd5e1;
+            padding: 4px 0;
+            cursor: pointer;
+        }
+        .genre-item input {
+            cursor: pointer;
+            accent-color: #0284c7;
+        }
+        .slider-group {
+            background: rgba(15, 23, 42, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .slider-label {
+            font-size: 11.5px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        .slider-val {
+            font-size: 11px;
+            color: #38bdf8;
+            font-weight: 600;
+            background: rgba(56, 189, 248, 0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .range-slider {
+            width: 100%;
+            cursor: pointer;
+            accent-color: #38bdf8;
+        }
+        .genre-selector-select {
+            width: 100%;
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+        }
+        .nav-home-btn {
+            background: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .nav-home-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f8fafc;
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Controls -->
+        <aside class="sidebar" style="width: 320px;">
+            <div class="brand">
+                <div style="background: linear-gradient(135deg, #a78bfa, #0f172a); width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(167, 139, 250, 0.3);">
+                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="#f8fafc" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                </div>
+                <div>
+                    <h1>Vetting the HRE</h1>
+                    <span class="subtitle">Print Genre Timelines (1500–1800)</span>
+                </div>
+            </div>
+            
+            <!-- Controls Box -->
+            <div class="panel controls-panel">
+                <h2>Select Publishing City</h2>
+                <div class="control-group">
+                    <select id="city-selector" class="genre-selector-select">
+                        <option value="all cities" selected>All Cities Combined</option>
+                        <option value="leipzig">Leipzig</option>
+                        <option value="wittenberg">Wittenberg</option>
+                        <option value="jena">Jena</option>
+                        <option value="köln">Köln (Cologne)</option>
+                        <option value="frankfurt">Frankfurt (Main)</option>
+                        <option value="augsburg">Augsburg</option>
+                        <option value="berlin">Berlin</option>
+                        <option value="nürnberg">Nürnberg</option>
+                        <option value="straßburg">Straßburg</option>
+                        <option value="halle">Halle</option>
+                        <option value="helmstedt">Helmstedt</option>
+                        <option value="hamburg">Hamburg</option>
+                        <option value="dresden">Dresden</option>
+                        <option value="rostock">Rostock</option>
+                        <option value="wien">Wien (Vienna)</option>
+                        <option value="tübingen">Tübingen</option>
+                        <option value="erfurt">Erfurt</option>
+                        <option value="basel">Basel</option>
+                        <option value="göttingen">Göttingen</option>
+                        <option value="münchen">München (Munich)</option>
+                    </select>
+                </div>
+                
+                <!-- Smoothing Slider -->
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">Smoothing (Moving Avg)</span>
+                        <span id="smoothing-val" class="slider-val">5 years</span>
+                    </div>
+                    <input type="range" id="smoothing-slider" class="range-slider" min="1" max="25" value="5" step="1">
+                </div>
+            </div>
+            
+            <!-- Genre Checklist Box -->
+            <div class="panel controls-panel" style="flex-grow: 1; display: flex; flex-direction: column;">
+                <h2>Filter Print Genres (Level 1)</h2>
+                <div style="display: flex; gap: 8px; margin-bottom: 6px;">
+                    <button id="btn-select-all" class="btn btn-secondary" style="font-size: 10px; padding: 4px 8px; flex-grow: 1;">Select All</button>
+                    <button id="btn-deselect-all" class="btn btn-secondary" style="font-size: 10px; padding: 4px 8px; flex-grow: 1;">Deselect All</button>
+                </div>
+                <div id="genre-checklist" class="genre-checklist-container" style="flex-grow: 1;">
+                    <!-- Filled dynamically -->
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <main class="main-content" style="overflow: hidden; height: 100vh; display: flex; flex-direction: column;">
+            <nav class="tabs-bar">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div>
+                        <h2 style="font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; color: #f8fafc; margin: 0;">Print Genre Timeline Explorer</h2>
+                        <p style="font-size: 12px; color: #94a3b8; margin: 4px 0 0 0; font-family: 'Inter', sans-serif;">Tracking subject matter trends in publications across three centuries.</p>
+                    </div>
+                    <a href="index.html" class="nav-home-btn">
+                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                        <span>Portal Home</span>
+                    </a>
+                </div>
+            </nav>
+            
+            <!-- Chart Card container -->
+            <div style="flex-grow: 1; padding: 24px; display: flex; flex-direction: column; overflow: hidden;">
+                <div class="chart-card" style="flex-grow: 1; margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100%;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3 id="chart-city-title">All Cities Combined: Print Genres</h3>
+                        <div style="font-size: 11px; color: #64748b; font-family: 'Inter', sans-serif;">Calculated using distinct book records matching the genre map</div>
+                    </div>
+                    <div class="chart-wrapper" style="flex-grow: 1; height: calc(100% - 40px); position: relative;">
+                        <canvas id="chart-genre-timeline"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="genres.js"></script>
+</body>
+</html>
