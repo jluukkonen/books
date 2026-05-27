@@ -1,0 +1,172 @@
+{
+  "1500-1529": {
+    "status": "skipped_empty",
+    "updeg_gini": null,
+    "lowdeg_gini": null,
+    "clustering": {
+      "obs": null,
+      "coef_mean": null,
+      "coef_lb": null,
+      "coef_ub": null
+    },
+    "distance": {
+      "obs": null,
+      "coef_mean": null,
+      "coef_lb": null,
+      "coef_ub": null
+    }
+  },
+  "1530-1559": {
+    "status": "skipped_empty",
+    "updeg_gini": null,
+    "lowdeg_gini": null,
+    "clustering": {
+      "obs": null,
+      "coef_mean": null,
+      "coef_lb": null,
+      "coef_ub": null
+    },
+    "distance": {
+      "obs": null,
+      "coef_mean": null,
+      "coef_lb": null,
+      "coef_ub": null
+    }
+  },
+  "1560-1589": {
+    "status": "completed",
+    "updeg_gini": 0.816533155318202,
+    "lowdeg_gini": 0.16806471479368668,
+    "clustering": {
+      "obs": 0.7689911749067087,
+      "coef_mean": 0.9244373897428583,
+      "coef_lb": 0.9244373897428582,
+      "coef_ub": 0.9244373897428582
+    },
+    "distance": {
+      "obs": 2.818462401795735,
+      "coef_mean": 0.8872559358579982,
+      "coef_lb": 0.8872559358579982,
+      "coef_ub": 0.8872559358579982
+    }
+  },
+  "1590-1619": {
+    "status": "completed",
+    "updeg_gini": 0.9234654038941084,
+    "lowdeg_gini": 0.14149557566905835,
+    "clustering": {
+      "obs": 0.8563241860523008,
+      "coef_mean": 0.9460930207562155,
+      "coef_lb": 0.9460930207562156,
+      "coef_ub": 0.9461897270188936
+    },
+    "distance": {
+      "obs": 3.302334579028358,
+      "coef_mean": 0.9611483109601415,
+      "coef_lb": 0.9611483109601416,
+      "coef_ub": 0.9618450230179684
+    }
+  },
+  "1620-1649": {
+    "status": "completed",
+    "updeg_gini": 0.8826084324586096,
+    "lowdeg_gini": 0.18526132392745653,
+    "clustering": {
+      "obs": 0.7648210502054955,
+      "coef_mean": 0.9551853683262237,
+      "coef_lb": 0.9537986639686807,
+      "coef_ub": 0.955185368326224
+    },
+    "distance": {
+      "obs": 3.3846132596685083,
+      "coef_mean": 0.8925074027072923,
+      "coef_lb": 0.8925074027072922,
+      "coef_ub": 0.8926451169921202
+    }
+  },
+  "1650-1679": {
+    "status": "completed",
+    "updeg_gini": 0.8680637246164997,
+    "lowdeg_gini": 0.2577630553975545,
+    "clustering": {
+      "obs": 0.6676271722195675,
+      "coef_mean": 1.0227007515270388,
+      "coef_lb": 1.021742127615207,
+      "coef_ub": 1.0227007515270392
+    },
+    "distance": {
+      "obs": 3.601445448227936,
+      "coef_mean": 0.9586276446917307,
+      "coef_lb": 0.9566338429679838,
+      "coef_ub": 0.9586276446917305
+    }
+  },
+  "1680-1709": {
+    "status": "completed",
+    "updeg_gini": 0.8148192367688167,
+    "lowdeg_gini": 0.3142291231884262,
+    "clustering": {
+      "obs": 0.5678316021123675,
+      "coef_mean": 1.0163663346862974,
+      "coef_lb": 1.0163663346862977,
+      "coef_ub": 1.0163663346862977
+    },
+    "distance": {
+      "obs": 3.6881393819855357,
+      "coef_mean": 0.9028540533273833,
+      "coef_lb": 0.9028540533273831,
+      "coef_ub": 0.9028540533273831
+    }
+  },
+  "1710-1739": {
+    "status": "completed",
+    "updeg_gini": 0.6793415009248291,
+    "lowdeg_gini": 0.44663338148292686,
+    "clustering": {
+      "obs": 0.3845764175154676,
+      "coef_mean": 1.0631982559971547,
+      "coef_lb": 1.046812361149928,
+      "coef_ub": 1.085143885942528
+    },
+    "distance": {
+      "obs": 3.8614616755793225,
+      "coef_mean": 0.934332401029018,
+      "coef_lb": 0.9296636676199534,
+      "coef_ub": 0.9391540652164784
+    }
+  },
+  "1740-1769": {
+    "status": "completed",
+    "updeg_gini": 0.6626208580850297,
+    "lowdeg_gini": 0.436444525398497,
+    "clustering": {
+      "obs": 0.41259972474702344,
+      "coef_mean": 1.106076349653882,
+      "coef_lb": 1.0507065693884485,
+      "coef_ub": 1.113589149271303
+    },
+    "distance": {
+      "obs": 3.9154849498327757,
+      "coef_mean": 0.962540993718922,
+      "coef_lb": 0.939101307345782,
+      "coef_ub": 0.9666548194683061
+    }
+  },
+  "1770-1799": {
+    "status": "completed",
+    "updeg_gini": 0.6187396289033036,
+    "lowdeg_gini": 0.40390917014465066,
+    "clustering": {
+      "obs": 0.5228778011776777,
+      "coef_mean": 1.3525885972563987,
+      "coef_lb": 1.3506877092507728,
+      "coef_ub": 1.3525885972563982
+    },
+    "distance": {
+      "obs": 4.0974576271186445,
+      "coef_mean": 0.9425404915308541,
+      "coef_lb": 0.9417407424918112,
+      "coef_ub": 0.9425404915308543
+    }
+  }
+}

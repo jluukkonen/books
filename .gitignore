@@ -19,3 +19,11 @@ gsheets_authorized_user.json
 
 .Rhistory
 .vscode
+
+# System files
+**/.DS_Store
+
+# Large datasets
+data/output/genres_vd_clean.csv
+data/work/vd_all_*.jsonl
+

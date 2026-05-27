@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vetting the HRE: Censorship & Book Trade Network (1500-1800)</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=UnifrakturMaguntia&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+    
+    <!-- CSS Dependencies -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="index.css?v=9">
+    
+    <!-- JS Dependencies (from CDN for ease of hosting) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Filter Controls & Info panel -->
+        <aside class="sidebar">
+            <div class="brand">
+                <model-viewer 
+                    src="assets/glb/jesuit_christogram.glb" 
+                    auto-rotate 
+                    camera-controls 
+                    disable-zoom
+                    disable-pan
+                    shadow-intensity="0.5"
+                    style="width: 42px; height: 42px; background: transparent; border-radius: 50%; flex-shrink: 0;"
+                    class="brand-logo-3d">
+                </model-viewer>
+                <div>
+                    <h1>Vetting the HRE</h1>
+                    <span class="subtitle">300 Years of Book Censorship (1500–1800)</span>
+                </div>
+            </div>
+            
+            <!-- Controls Box -->
+            <div class="panel controls-panel">
+                <h2>Controls & Filters</h2>
+                
+                <!-- Search bar -->
+                <div class="control-group">
+                    <label for="search-input">Search Censor / Publisher</label>
+                    <input type="text" id="search-input" placeholder="Type a name (e.g. Tanner, Eder)..." autocomplete="off">
+                    <div id="search-results" class="search-results-dropdown hidden"></div>
+                </div>
+                
+                <!-- Edge Weight Slider -->
+                <div class="control-group">
+                    <div class="slider-header">
+                        <label for="weight-slider">Min Edge Weight (Books Vetted)</label>
+                        <span id="weight-value" class="badge">4</span>
+                    </div>
+                    <input type="range" id="weight-slider" min="2" max="15" value="4" step="1">
+                    <span class="control-help">Higher values reduce clutter and show major hubs.</span>
+                </div>
+                
+                <!-- Jesuit Only toggle -->
+                <div class="control-group checkbox-group switch-group">
+                    <span class="control-label-text">Show Jesuit Censors Only</span>
+                    <label class="switch-toggle">
+                        <input type="checkbox" id="jesuit-checkbox">
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+                
+                <!-- Reset Button -->
+                <button id="reset-button" class="btn btn-secondary">Reset Visualization</button>
+            </div>
+            
+            <!-- Dynamic Info Box -->
+            <div class="panel info-panel" id="info-panel">
+                <div class="info-placeholder" id="info-placeholder" style="justify-content: flex-start; padding-top: 10px;">
+                    <model-viewer 
+                        src="assets/glb/sacred_heart_emblem.glb" 
+                        auto-rotate 
+                        camera-controls 
+                        shadow-intensity="1.2"
+                        style="width: 100%; height: 160px; background: transparent; margin-bottom: 8px;"
+                        class="placeholder-3d-model">
+                    </model-viewer>
+                    <h3 class="placeholder-title" style="font-family: 'UnifrakturMaguntia', serif; font-size: 24px; color: #f8fafc; margin: 4px 0 10px 0; letter-spacing: 0.5px;">Dashboard Guide</h3>
+                    <div class="placeholder-guide" style="text-align: left; font-size: 11.5px; color: #94a3b8; line-height: 1.5; padding: 0 12px; display: flex; flex-direction: column; gap: 8px; font-family: 'Inter', sans-serif;">
+                        <p style="font-family: 'IM Fell English', serif; font-style: italic; font-size: 13px; color: #cbd5e1; text-align: center; margin-bottom: 6px;">Explore 300 years of book trade regulations, Jesuit influence, and censorship networks across the HRE (1500–1800).</p>
+                        <div style="display: flex; gap: 8px; align-items: flex-start;">
+                            <span style="color: #38bdf8; font-weight: bold;">✦</span>
+                            <span><strong>Select:</strong> Click any city marker on the Map, or actor node (Censor/Publisher) in the Network to view detailed history.</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: flex-start;">
+                            <span style="color: #38bdf8; font-weight: bold;">✦</span>
+                            <span><strong>Filter:</strong> Adjust Edge Weights to reduce clutter, filter to Jesuit censors, or toggle confessional hubs.</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: flex-start;">
+                            <span style="color: #38bdf8; font-weight: bold;">✦</span>
+                            <span><strong>Search:</strong> Use the search bar in the controls panel to locate specific actors directly.</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="info-content hidden" id="info-content">
+                    <div class="info-section hidden" id="section-city-image" style="margin-bottom: 12px;">
+                        <img id="sidebar-city-image" class="sidebar-city-image" src="" alt="City view">
+                    </div>
+                    <div class="info-section hidden" id="section-3d" style="margin-bottom: 12px; height: 160px; position: relative;">
+                        <model-viewer 
+                            id="sidebar-3d"
+                            auto-rotate 
+                            camera-controls 
+                            shadow-intensity="1.2"
+                            style="width: 100%; height: 100%; background: transparent;"
+                            class="sidebar-3d-model">
+                        </model-viewer>
+                    </div>
+                    <h3 id="info-name">Actor Name</h3>
+                    <div class="tag-row">
+                        <span id="info-tag-type" class="badge badge-type">Censor</span>
+                        <span id="info-tag-jesuit" class="badge badge-jesuit hidden">Jesuit</span>
+                    </div>
+                    
+                    <div class="info-section" id="section-gnd">
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                            <span>GND Authority Link</span>
+                        </h4>
+                        <a href="#" id="info-gnd-link" target="_blank" class="gnd-link">GND ID</a>
+                    </div>
+                    
+                    <div class="info-section" id="section-occupations">
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                            <span>Occupations & Background</span>
+                        </h4>
+                        <p id="info-occupations">Professor of theology, Jesuit priest.</p>
+                    </div>
+                    
+                    <div class="info-section" id="section-biography">
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                            <span>Biographical Notes</span>
+                        </h4>
+                        <p id="info-biography">Born 1572 in Munich, taught at Ingolstadt, died 1632.</p>
+                    </div>
+                    
+                    <div class="info-section hidden" id="section-city-timeline">
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                            <span>300-Year Output Trend</span>
+                        </h4>
+                        <div class="city-chart-wrapper">
+                            <canvas id="city-timeline-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="info-section hidden" id="section-actor-timeline">
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                            <span>Vetting Activity Timeline</span>
+                        </h4>
+                        <div class="actor-chart-wrapper" style="height: 120px; position: relative; margin-top: 8px;">
+                            <canvas id="actor-timeline-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="info-section hidden" id="section-connections">
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            <span>Key Partnerships & Locations</span>
+                        </h4>
+                        <ul id="info-connections-list" class="connections-list"></ul>
+                    </div>
+                    
+                    <div class="info-section" id="section-stats">
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                            <span>Degree Centrality</span>
+                        </h4>
+                        <p>This actor is connected to <strong id="info-degree">12</strong> other nodes in the active graph.</p>
+                    </div>
+                    
+                    <div class="info-section hidden" id="section-map-actions">
+                        <h4>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="heading-icon"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                            <span>Map Actions</span>
+                        </h4>
+                        <button id="btn-highlight-city-actors" class="btn btn-secondary">Highlight City Actors in Network</button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Panel Content -->
+        <main class="main-content">
+            <!-- Top Navigation Tab Bar -->
+            <nav class="tabs-bar">
+                <button class="tab-button active" data-tab="network-tab">Bipartite Network</button>
+                <button class="tab-button" data-tab="map-tab">Geographic Map</button>
+                <button class="tab-button" data-tab="timeline-tab">300-Year Timelines</button>
+                <button class="tab-button" data-tab="info-tab">About the Team</button>
+            </nav>
+            
+            <!-- Tab Contents -->
+            <div class="tab-container">
+                <!-- TAB 1: NETWORK -->
+                <div class="tab-content active" id="network-tab">
+                    <div class="network-legend">
+                        <span class="legend-item"><span class="legend-dot color-censor"></span>Censor (Non-Jesuit/Unresolved)</span>
+                        <span class="legend-item"><span class="legend-dot color-jesuit"></span>Censor (Jesuit)</span>
+                        <span class="legend-item"><span class="legend-dot color-pub"></span>Publisher / Printer</span>
+                        <span class="legend-item"><span class="legend-line"></span>Vetting Connection</span>
+                    </div>
+                    <div id="network-container" class="viz-container">
+                        <div class="loading-overlay" id="network-loading">
+                            <div class="loading-ink-splatter top-left"></div>
+                            <div class="loading-ink-splatter bottom-right"></div>
+                            <model-viewer 
+                                src="assets/glb/printing_press.glb" 
+                                auto-rotate 
+                                camera-controls 
+                                shadow-intensity="1.5"
+                                style="width: 260px; height: 260px; background: transparent; margin-bottom: 10px;"
+                                class="loader-3d-model">
+                            </model-viewer>
+                            <h3 class="loading-title">Vetting the Holy Roman Empire</h3>
+                            <p class="loading-desc">Loading censorship records & actor network graph...</p>
+                            <div class="spinner" style="margin-top: 15px;"></div>
+                        </div>
+                        <svg id="network-svg" width="100%" height="100%"></svg>
+                    </div>
+                </div>
+                
+                <!-- TAB 2: GEOGRAPHIC MAP -->
+                <div class="tab-content" id="map-tab">
+                    <div class="map-controls">
+                        <!-- Play Button & Decade Slider -->
+                        <div class="slider-container">
+                            <div class="slider-header">
+                                <div class="slider-header-left">
+                                    <button id="map-play-btn" class="map-play-btn">
+                                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="currentColor" id="play-icon" style="margin-right: 4px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                        <span>Play</span>
+                                    </button>
+                                    <span class="slider-title">Timeline Slider (1500–1800)</span>
+                                </div>
+                                <span id="map-year-label" class="badge">Decade: 1610s</span>
+                            </div>
+                            <input type="range" id="map-year-slider" min="1500" max="1790" value="1610" step="10">
+                            <div class="slider-ticks">
+                                <span>1500</span>
+                                <span>1550</span>
+                                <span>1600</span>
+                                <span>1650</span>
+                                <span>1700</span>
+                                <span>1750</span>
+                                <span>1800</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Output Volume Threshold -->
+                        <div class="map-volume-container">
+                            <div class="slider-header">
+                                <span class="slider-title">Min Volume</span>
+                                <span id="map-volume-label" class="badge">1 title</span>
+                            </div>
+                            <input type="range" id="map-volume-slider" min="1" max="100" value="1" step="1">
+                        </div>
+                        
+                        <!-- Confessional Filters -->
+                        <div class="map-legend">
+                            <span class="legend-title">Confession Filters</span>
+                            <div class="legend-filters">
+                                <div class="filter-switch-item">
+                                    <label class="switch-toggle mini-switch">
+                                        <input type="checkbox" id="filter-catholic" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                    <span class="filter-label-text"><span class="legend-dot color-catholic-hub"></span>Catholic</span>
+                                </div>
+                                <div class="filter-switch-item">
+                                    <label class="switch-toggle mini-switch">
+                                        <input type="checkbox" id="filter-protestant" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                    <span class="filter-label-text"><span class="legend-dot color-protestant-hub"></span>Protestant</span>
+                                </div>
+                                <div class="filter-switch-item">
+                                    <label class="switch-toggle mini-switch">
+                                        <input type="checkbox" id="filter-mixed" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                    <span class="filter-label-text"><span class="legend-dot color-mixed-hub"></span>Mixed</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="map-container" class="viz-container"></div>
+                </div>
+                
+                <!-- TAB 3: TIMELINES -->
+                <div class="tab-content" id="timeline-tab">
+                    <div class="charts-grid">
+                        <!-- Chart 1: Leipzig vs Frankfurt -->
+                        <div class="chart-card">
+                            <h3>Leipzig vs. Frankfurt Book output</h3>
+                            <p class="chart-desc">The long-term shift in dominance from the late 16th century to the late 18th century.</p>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-leipzig-frankfurt"></canvas>
+                            </div>
+                        </div>
+                        <!-- Chart 2: Confessional Shares -->
+                        <div class="chart-card">
+                            <h3>Printing output by Confessional Geography</h3>
+                            <p class="chart-desc">Protestant hubs vs. Catholic hubs vs. Mixed hubs (1500–1790).</p>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-confessional"></canvas>
+                            </div>
+                        </div>
+                        <!-- Chart 3: Language distribution -->
+                        <div class="chart-card">
+                            <h3>Language Shift: % Vernacular German</h3>
+                            <p class="chart-desc">Ratio of German (vs. Latin) publications in Protestant, Catholic, and Mixed hubs.</p>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-language"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- TAB 4: ABOUT THE TEAM (COIN CABINET) -->
+                <div class="tab-content" id="info-tab">
+                    <div class="cabinet-header">
+                        <h2 class="cabinet-title">The DHH26 Numismatic Cabinet</h2>
+                        <p class="cabinet-desc">Explore the members of the DHH26 Book Group, represented as 3D versions of historical coins and medals matching their specialties and roles.</p>
+                    </div>
+                    <div id="team-grid" class="team-grid"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="network-tooltip" class="network-tooltip hidden"></div>
+    
+    <!-- Custom JS Application Logic -->
+    <script src="app.js?v=9"></script>
+</body>
+</html>

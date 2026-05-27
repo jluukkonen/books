@@ -1,0 +1,172 @@
+{
+  "1500-1529": {
+    "status": "skipped_empty",
+    "updeg_gini": null,
+    "lowdeg_gini": null,
+    "clustering": {
+      "obs": null,
+      "coef_mean": null,
+      "coef_lb": null,
+      "coef_ub": null
+    },
+    "distance": {
+      "obs": null,
+      "coef_mean": null,
+      "coef_lb": null,
+      "coef_ub": null
+    }
+  },
+  "1530-1559": {
+    "status": "skipped_empty",
+    "updeg_gini": null,
+    "lowdeg_gini": null,
+    "clustering": {
+      "obs": null,
+      "coef_mean": null,
+      "coef_lb": null,
+      "coef_ub": null
+    },
+    "distance": {
+      "obs": null,
+      "coef_mean": null,
+      "coef_lb": null,
+      "coef_ub": null
+    }
+  },
+  "1560-1589": {
+    "status": "skipped_empty",
+    "updeg_gini": null,
+    "lowdeg_gini": null,
+    "clustering": {
+      "obs": null,
+      "coef_mean": null,
+      "coef_lb": null,
+      "coef_ub": null
+    },
+    "distance": {
+      "obs": null,
+      "coef_mean": null,
+      "coef_lb": null,
+      "coef_ub": null
+    }
+  },
+  "1590-1619": {
+    "status": "completed",
+    "updeg_gini": 0.0,
+    "lowdeg_gini": 0.0,
+    "clustering": {
+      "obs": 0.6666666666666666,
+      "coef_mean": 1.0,
+      "coef_lb": 1.0,
+      "coef_ub": 1.0
+    },
+    "distance": {
+      "obs": 1.0,
+      "coef_mean": 1.0,
+      "coef_lb": 1.0,
+      "coef_ub": 1.0
+    }
+  },
+  "1620-1649": {
+    "status": "skipped_empty",
+    "updeg_gini": null,
+    "lowdeg_gini": null,
+    "clustering": {
+      "obs": null,
+      "coef_mean": null,
+      "coef_lb": null,
+      "coef_ub": null
+    },
+    "distance": {
+      "obs": null,
+      "coef_mean": null,
+      "coef_lb": null,
+      "coef_ub": null
+    }
+  },
+  "1650-1679": {
+    "status": "completed",
+    "updeg_gini": 0.5769230769230769,
+    "lowdeg_gini": 0.12627840909090904,
+    "clustering": {
+      "obs": 0.7393661611841179,
+      "coef_mean": 0.9737285441324692,
+      "coef_lb": 0.973728544132469,
+      "coef_ub": 0.973728544132469
+    },
+    "distance": {
+      "obs": 3.34,
+      "coef_mean": 0.9675732368896923,
+      "coef_lb": 0.9675732368896924,
+      "coef_ub": 0.9675732368896924
+    }
+  },
+  "1680-1709": {
+    "status": "completed",
+    "updeg_gini": 0.6253925057567511,
+    "lowdeg_gini": 0.22701590460609533,
+    "clustering": {
+      "obs": 0.6767698442382776,
+      "coef_mean": 1.0547886680108962,
+      "coef_lb": 1.0547886680108962,
+      "coef_ub": 1.0547886680108962
+    },
+    "distance": {
+      "obs": 4.076269746899949,
+      "coef_mean": 1.0020982669865424,
+      "coef_lb": 1.0020982669865421,
+      "coef_ub": 1.0020982669865421
+    }
+  },
+  "1710-1739": {
+    "status": "completed",
+    "updeg_gini": 0.4812324843389384,
+    "lowdeg_gini": 0.4689358479321606,
+    "clustering": {
+      "obs": 0.38646467491697073,
+      "coef_mean": 1.20160164091928,
+      "coef_lb": 1.2016016409192805,
+      "coef_ub": 1.2016016409192805
+    },
+    "distance": {
+      "obs": 4.152904656319291,
+      "coef_mean": 0.96939489347745,
+      "coef_lb": 0.96939489347745,
+      "coef_ub": 0.96939489347745
+    }
+  },
+  "1740-1769": {
+    "status": "completed",
+    "updeg_gini": 0.5693682279184571,
+    "lowdeg_gini": 0.528003943845025,
+    "clustering": {
+      "obs": 0.3156053513182884,
+      "coef_mean": 1.1183260206388248,
+      "coef_lb": 1.0705027103666491,
+      "coef_ub": 1.166149330911
+    },
+    "distance": {
+      "obs": 4.351942446043165,
+      "coef_mean": 0.989896286413301,
+      "coef_lb": 0.9843241259555588,
+      "coef_ub": 0.9954684468710425
+    }
+  },
+  "1770-1799": {
+    "status": "completed",
+    "updeg_gini": 0.6582280694535878,
+    "lowdeg_gini": 0.42794104860446924,
+    "clustering": {
+      "obs": 0.4488786039808223,
+      "coef_mean": 1.196008894079028,
+      "coef_lb": 1.196008894079028,
+      "coef_ub": 1.1962741308236742
+    },
+    "distance": {
+      "obs": 4.0308513053348465,
+      "coef_mean": 0.9532991940792426,
+      "coef_lb": 0.9532991940792427,
+      "coef_ub": 0.9541373894088393
+    }
+  }
+}

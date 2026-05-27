@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vetting the HRE: City Book Trade Networks (1500-1800)</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+    
+    <!-- CSS Dependencies -->
+    <link rel="stylesheet" href="index.css?v=10">
+    
+    <!-- JS Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* Extra styles specific to City Trade Dashboard */
+        .city-metadata-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 11.5px;
+            color: #cbd5e1;
+            font-family: 'Inter', sans-serif;
+        }
+        .city-metadata-table td {
+            padding: 5px 0;
+            vertical-align: top;
+        }
+        .city-metadata-table td:first-child {
+            color: #94a3b8;
+            font-weight: 500;
+            width: 90px;
+            padding-right: 8px;
+        }
+        .crisis-text-box {
+            font-size: 11px;
+            color: #94a3b8;
+            line-height: 1.5;
+            max-height: 160px;
+            overflow-y: auto;
+            background: rgba(15, 23, 42, 0.4);
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 6px;
+            font-family: 'Inter', sans-serif;
+        }
+        .checklist-container {
+            max-height: 120px;
+            overflow-y: auto;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 6px 10px;
+            margin-top: 4px;
+        }
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11.5px;
+            color: #cbd5e1;
+            padding: 3px 0;
+            cursor: pointer;
+        }
+        .checklist-item input {
+            cursor: pointer;
+            accent-color: #38bdf8;
+        }
+        .nav-home-btn {
+            background: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .nav-home-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f8fafc;
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        .city-selector-select {
+            width: 100%;
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s ease;
+        }
+        .city-selector-select:focus {
+            border-color: #38bdf8;
+        }
+        .grid-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .grid-title-area h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #f8fafc;
+            margin: 0;
+        }
+        .grid-title-area p {
+            font-size: 12px;
+            color: #94a3b8;
+            margin: 4px 0 0 0;
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Filter Controls & Info panel -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div style="background: linear-gradient(135deg, #0284c7, #0f172a); width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);">
+                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="#f8fafc" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                </div>
+                <div>
+                    <h1>Vetting the HRE</h1>
+                    <span class="subtitle">City Printing Networks (1500–1800)</span>
+                </div>
+            </div>
+            
+            <!-- Controls Box -->
+            <div class="panel controls-panel">
+                <h2>Select Active City</h2>
+                
+                <!-- City Selector -->
+                <div class="control-group">
+                    <select id="city-selector" class="city-selector-select">
+                        <option value="leipzig">Leipzig</option>
+                        <option value="wittenberg">Wittenberg</option>
+                        <option value="jena" selected>Jena</option>
+                        <option value="köln">Köln (Cologne)</option>
+                        <option value="frankfurt">Frankfurt (Main)</option>
+                        <option value="augsburg">Augsburg</option>
+                        <option value="berlin">Berlin</option>
+                        <option value="nürnberg">Nürnberg</option>
+                        <option value="straßburg">Straßburg</option>
+                        <option value="halle">Halle</option>
+                        <option value="helmstedt">Helmstedt</option>
+                        <option value="hamburg">Hamburg</option>
+                        <option value="dresden">Dresden</option>
+                        <option value="rostock">Rostock</option>
+                        <option value="wien">Wien (Vienna)</option>
+                        <option value="tübingen">Tübingen</option>
+                        <option value="erfurt">Erfurt</option>
+                        <option value="basel">Basel</option>
+                        <option value="göttingen">Göttingen</option>
+                        <option value="münchen">München (Munich)</option>
+                    </select>
+                </div>
+                
+                <!-- Multi-city comparison selector -->
+                <div class="control-group" style="margin-top: 15px;">
+                    <label>Compare Cities (Monopoly Gini)</label>
+                    <div id="comparison-checklist" class="checklist-container">
+                        <!-- Filled dynamically -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- City Info Panel -->
+            <div class="panel info-panel" id="city-info-panel">
+                <h3 id="info-city-name" style="font-family: 'Outfit', sans-serif; font-size: 20px; color: #f8fafc; margin: 4px 0 10px 0;">City Details</h3>
+                <div class="info-content">
+                    <table class="city-metadata-table">
+                        <tr>
+                            <td>Territory:</td>
+                            <td id="meta-territory">-</td>
+                        </tr>
+                        <tr>
+                            <td>Uni City:</td>
+                            <td id="meta-uni">-</td>
+                        </tr>
+                        <tr>
+                            <td>Uni Founded:</td>
+                            <td id="meta-uni-year">-</td>
+                        </tr>
+                        <tr>
+                            <td>Uni Religion:</td>
+                            <td id="meta-uni-religion">-</td>
+                        </tr>
+                        <tr>
+                            <td>City Religion:</td>
+                            <td id="meta-city-religion">-</td>
+                        </tr>
+                    </table>
+                    
+                    <div style="margin-top: 12px;">
+                        <h4 style="font-size: 11px; text-transform: uppercase; color: #38bdf8; letter-spacing: 0.5px; margin: 0 0 4px 0;">Historical Crises & Context</h4>
+                        <div id="meta-crises" class="crisis-text-box">No details available.</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Panel Content -->
+        <main class="main-content" style="overflow-y: auto;">
+            <!-- Top Navigation Tab Bar -->
+            <nav class="tabs-bar">
+                <div class="grid-header" style="width: 100%; margin: 0;">
+                    <div class="grid-title-area">
+                        <h2 id="dashboard-title">City Network Analysis Dashboard</h2>
+                        <p>Comparing 20 historical printing hubs across 300 years of publishing data.</p>
+                    </div>
+                    <a href="index.html" class="nav-home-btn">
+                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                        <span>Portal Home</span>
+                    </a>
+                </div>
+            </nav>
+            
+            <!-- Tab Contents -->
+            <div style="padding: 24px; flex-grow: 1; overflow-y: visible; position: relative;">
+                <div class="charts-grid" style="grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    <!-- Chart 1: Monopoly Gini -->
+                    <div class="chart-card">
+                        <h3>Market Monopoly (Degree Gini)</h3>
+                        <p class="chart-desc">Publisher degree concentration vs. Author degree concentration over time. Higher values = more monopolized by a few actors.</p>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-gini"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart 2: Bipartite Clustering Ratio -->
+                    <div class="chart-card">
+                        <h3>Bipartite Clustering Ratio (Observed / Random)</h3>
+                        <p class="chart-desc">Ratio of actual local bipartite clustering compared to random configuration models. Values > 1.0 indicate tight cliques.</p>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-clustering"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart 3: Network Path Distance Ratio -->
+                    <div class="chart-card">
+                        <h3>Average Path Distance Ratio (Observed / Random)</h3>
+                        <p class="chart-desc">Average author-to-publisher shortest path length ratio in LCC. Ratios < 1.0 indicate tighter, faster information spread.</p>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-distance"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart 4: Multi-City Gini Comparison -->
+                    <div class="chart-card">
+                        <h3>Multi-City Comparative Monopoly</h3>
+                        <p class="chart-desc">Compare the publisher degree Gini index across multiple selected printing hubs side-by-side.</p>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-compare-gini"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- JS Logic -->
+    <script src="city_trade.js"></script>
+</body>
+</html>
