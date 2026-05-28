@@ -1801,6 +1801,29 @@ input[type="range"]::-moz-range-progress {
     .brand .subtitle {
         font-size: 10px !important;
     }
+
+    /* Mobile Numismatic Cabinet (Team Gallery) overrides */
+    .team-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 16px !important;
+        padding: 12px !important;
+        max-width: 100% !important;
+    }
+    
+    .team-card {
+        padding: 16px 12px !important;
+        border-radius: 10px !important;
+    }
+    
+    .coin-viewer-wrapper {
+        width: 100px !important;
+        height: 100px !important;
+        margin-bottom: 12px !important;
+    }
+    
+    .team-card h3 {
+        font-size: 14px !important;
+    }
 }
 
 /* Default state for mobile components on desktop */

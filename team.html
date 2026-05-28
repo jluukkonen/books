@@ -117,6 +117,25 @@
         .coin-viewer-wrapper.flipping {
             animation: flip-coin 1s ease-in-out;
         }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 24px 12px !important;
+            }
+            header {
+                flex-direction: column !important;
+                align-items: center !important;
+                text-align: center !important;
+                gap: 16px !important;
+                padding-bottom: 20px !important;
+            }
+            .header-title h1 {
+                font-size: 30px !important;
+            }
+            .header-title p {
+                font-size: 13px !important;
+            }
+        }
     </style>
 </head>
 <body>
