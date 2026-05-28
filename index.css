@@ -1506,3 +1506,153 @@ input[type="range"]::-moz-range-progress {
 .team-card:hover .team-bio::-webkit-scrollbar-thumb {
     background: rgba(56, 189, 248, 0.2);
 }
+
+/* ==========================================================================
+   MOBILE RESPONSIVENESS & PROGRESSIVE DISCLOSURE
+   ========================================================================== */
+@media (max-width: 768px) {
+    body {
+        overflow: auto !important;
+        height: auto !important;
+    }
+    
+    .app-container {
+        flex-direction: column;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 100vh;
+        position: relative;
+    }
+    
+    /* Collapsible Sidebar as slide-up drawer */
+    .sidebar {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 70vh !important;
+        z-index: 1000 !important;
+        border-right: none !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 20px 20px 0 0 !important;
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.6) !important;
+        transform: translateY(100%) !important;
+        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        overflow-y: auto !important;
+        padding: 24px 20px 80px 20px !important;
+    }
+    
+    .sidebar.mobile-open {
+        transform: translateY(0) !important;
+    }
+    
+    /* Pull-bar indicator at top of mobile drawer */
+    .sidebar::before {
+        content: '';
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+    }
+    
+    .main-content {
+        width: 100% !important;
+        height: auto !important;
+        padding-bottom: 80px !important; /* space for floating button */
+        overflow: visible !important;
+    }
+    
+    /* Floating mobile action button */
+    .mobile-filter-trigger {
+        display: flex !important;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #0284c7;
+        color: #f8fafc;
+        border: 1px solid #38bdf8;
+        border-radius: 30px;
+        padding: 12px 20px;
+        font-family: 'Outfit', sans-serif;
+        font-size: 13.5px;
+        font-weight: 600;
+        align-items: center;
+        gap: 8px;
+        z-index: 1001;
+        box-shadow: 0 4px 20px rgba(2, 132, 199, 0.4);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .mobile-filter-trigger:active {
+        transform: scale(0.95);
+        background: #0369a1;
+    }
+    
+    /* Backdrop overlay when mobile drawer is open */
+    .mobile-drawer-backdrop {
+        display: block !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        z-index: 999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+    
+    .mobile-drawer-backdrop.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    
+    /* Stacking grids */
+    .charts-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+    
+    .tabs-bar {
+        margin: 12px !important;
+        width: calc(100% - 24px) !important;
+        justify-content: center;
+    }
+    
+    .tab-button {
+        padding: 6px 12px !important;
+        font-size: 12px !important;
+    }
+    
+    .viz-container {
+        height: 350px !important; /* Limit height of visualizer canvas on phone screen */
+    }
+    
+    .leaflet-container {
+        height: 350px !important;
+    }
+    
+    /* Adjust text alignments for smaller widths */
+    .brand {
+        margin-bottom: 12px !important;
+    }
+    .brand h1 {
+        font-size: 20px !important;
+    }
+    .brand .subtitle {
+        font-size: 10px !important;
+    }
+}
+
+/* Default state for mobile components on desktop */
+.mobile-filter-trigger, .mobile-drawer-backdrop {
+    display: none;
+}

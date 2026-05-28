@@ -122,9 +122,18 @@ function getNodeCity(node) {
 // STARTUP AND INITIALIZATION
 // ==========================================================================
 document.addEventListener("DOMContentLoaded", () => {
+    // Mobile optimization: set a higher edge weight by default to avoid slow rendering
+    if (window.innerWidth <= 768) {
+        state.networkThreshold = 10;
+        const slider = document.getElementById('weight-slider');
+        const sliderValue = document.getElementById('weight-value');
+        if (slider) slider.value = 10;
+        if (sliderValue) sliderValue.innerText = "10";
+    }
     initTabs();
     initControls();
     loadData();
+    initMobileDrawer();
 });
 
 // Helper to wait for initial 3D models to finish loading
@@ -2007,4 +2016,24 @@ function initTeamCabinet() {
         
         grid.appendChild(card);
     });
+}
+
+function initMobileDrawer() {
+    const trigger = document.getElementById('mobile-filter-trigger');
+    const backdrop = document.getElementById('mobile-drawer-backdrop');
+    const sidebar = document.querySelector('.sidebar');
+    
+    if (!trigger || !sidebar) return;
+    
+    trigger.addEventListener('click', () => {
+        sidebar.classList.toggle('mobile-open');
+        if (backdrop) backdrop.classList.toggle('active');
+    });
+    
+    if (backdrop) {
+        backdrop.addEventListener('click', () => {
+            sidebar.classList.remove('mobile-open');
+            backdrop.classList.remove('active');
+        });
+    }
 }

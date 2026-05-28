@@ -135,6 +135,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     setupCityDropdown();
     setupGenreDrawer();
     updateChart();
+    initMobileDrawer();
     
     // Global Click Listener to close city dropdown when clicking outside
     document.addEventListener("click", (e) => {
@@ -681,4 +682,24 @@ function updateChart() {
             }
         }
     });
+}
+
+function initMobileDrawer() {
+    const trigger = document.getElementById('mobile-filter-trigger');
+    const backdrop = document.getElementById('mobile-drawer-backdrop');
+    const sidebar = document.querySelector('.sidebar');
+    
+    if (!trigger || !sidebar) return;
+    
+    trigger.addEventListener('click', () => {
+        sidebar.classList.toggle('mobile-open');
+        if (backdrop) backdrop.classList.toggle('active');
+    });
+    
+    if (backdrop) {
+        backdrop.addEventListener('click', () => {
+            sidebar.classList.remove('mobile-open');
+            backdrop.classList.remove('active');
+        });
+    }
 }

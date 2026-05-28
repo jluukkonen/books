@@ -72,6 +72,8 @@ window.addEventListener("DOMContentLoaded", async () => {
         loadCityMetadata(cityId);
         await loadCityStats(cityId);
     });
+    
+    initMobileDrawer();
 });
 
 // Load metadata JSON
@@ -322,4 +324,23 @@ async function updateComparisonChart() {
             }
         }
     });
+}
+
+function initMobileDrawer() {
+    const trigger = document.getElementById('mobile-filter-trigger');
+    const backdrop = document.getElementById('mobile-drawer-backdrop');
+    const sidebar = document.querySelector('.sidebar');
+    
+    if (!trigger || !sidebar) return;
+    
+    trigger.addEventListener('click', () => {
+        sidebar.classList.toggle('mobile-open');
+        if (backdrop) backdrop.classList.toggle('active');
+    });
+    if (backdrop) {
+        backdrop.addEventListener('click', () => {
+            sidebar.classList.remove('mobile-open');
+            backdrop.classList.remove('active');
+        });
+    }
 }
