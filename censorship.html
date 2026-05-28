@@ -21,6 +21,28 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+    <style>
+        .nav-home-btn {
+            background: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-family: 'Outfit', sans-serif;
+        }
+        .nav-home-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f8fafc;
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -199,12 +221,17 @@
         <!-- Main Panel Content -->
         <main class="main-content">
             <!-- Top Navigation Tab Bar -->
-            <nav class="tabs-bar">
-                <button class="tab-button active" data-tab="network-tab">Bipartite Network</button>
-                <button class="tab-button" data-tab="map-tab">Geographic Map</button>
-                <button class="tab-button" data-tab="timeline-tab">300-Year Timelines</button>
-                <button class="tab-button" data-tab="info-tab">About the Team</button>
-            </nav>
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding-right: 24px;">
+                <nav class="tabs-bar" style="margin: 16px 24px;">
+                    <button class="tab-button active" data-tab="network-tab">Bipartite Network</button>
+                    <button class="tab-button" data-tab="map-tab">Geographic Map</button>
+                    <button class="tab-button" data-tab="timeline-tab">300-Year Timelines</button>
+                </nav>
+                <a href="index.html" class="nav-home-btn">
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    <span>Portal Home</span>
+                </a>
+            </div>
             
             <!-- Tab Contents -->
             <div class="tab-container">
@@ -333,14 +360,6 @@
                     </div>
                 </div>
                 
-                <!-- TAB 4: ABOUT THE TEAM (COIN CABINET) -->
-                <div class="tab-content" id="info-tab">
-                    <div class="cabinet-header">
-                        <h2 class="cabinet-title">The DHH26 Numismatic Cabinet</h2>
-                        <p class="cabinet-desc">Explore the members of the DHH26 Book Group, represented as 3D versions of historical coins and medals matching their specialties and roles.</p>
-                    </div>
-                    <div id="team-grid" class="team-grid"></div>
-                </div>
             </div>
         </main>
     </div>

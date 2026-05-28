@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DHH26 Book Group: Numismatic Cabinet</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=UnifrakturMaguntia&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+    
+    <!-- CSS Link -->
+    <link rel="stylesheet" href="index.css?v=11">
+    
+    <!-- JS Dependencies (Model Viewer) -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+    
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        
+        .team-container {
+            max-width: 1200px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 24px;
+        }
+        
+        .header-title h1 {
+            font-family: 'UnifrakturMaguntia', serif;
+            font-size: 42px;
+            font-weight: 400;
+            background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        
+        .header-title p {
+            font-family: 'IM Fell English', serif;
+            font-style: italic;
+            font-size: 16px;
+            color: #38bdf8;
+        }
+        
+        .nav-home-btn {
+            background: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-family: 'Outfit', sans-serif;
+        }
+        
+        .nav-home-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f8fafc;
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        .bg-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(2, 132, 199, 0.05) 0%, transparent 70%);
+            z-index: -1;
+            filter: blur(40px);
+            pointer-events: none;
+        }
+        
+        .glow-top-left {
+            top: -200px;
+            left: -200px;
+        }
+        
+        .glow-bottom-right {
+            bottom: -200px;
+            right: -200px;
+        }
+        
+        /* Interactive 3D Coin Rotation */
+        @keyframes flip-coin {
+            0% { transform: rotateY(0deg) scale(1); }
+            50% { transform: rotateY(180deg) scale(1.15); }
+            100% { transform: rotateY(360deg) scale(1); }
+        }
+        
+        .coin-viewer-wrapper.flipping {
+            animation: flip-coin 1s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow glow-top-left"></div>
+    <div class="bg-glow glow-bottom-right"></div>
+    
+    <div class="team-container">
+        <!-- Header -->
+        <header>
+            <div class="header-title">
+                <h1>The DHH26 Numismatic Cabinet</h1>
+                <p>Explore the members of the DHH26 Book Group, represented as 3D versions of historical coins and medals.</p>
+            </div>
+            <a href="index.html" class="nav-home-btn">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                <span>Portal Home</span>
+            </a>
+        </header>
+        
+        <!-- Coins Grid -->
+        <div id="team-grid" class="team-grid">
+            <!-- Loaded dynamically by Javascript -->
+        </div>
+    </div>
+
+    <script>
+        const TEAM_MEMBERS = [
+            {
+                name: "Thea Lindquist",
+                model: "assets/glb/coin_imperial_eagle.glb"
+            },
+            {
+                name: "Eetu Mäkelä",
+                model: "assets/glb/coin_imperial_eagle.glb"
+            },
+            {
+                name: "Duong Nguyen",
+                model: "assets/glb/coin_leipzig.glb"
+            },
+            {
+                name: "Harri",
+                model: "assets/glb/coin_leipzig.glb"
+            },
+            {
+                name: "Aisvarya",
+                model: "assets/glb/coin_leipzig.glb"
+            },
+            {
+                name: "Sophia",
+                model: "assets/glb/coin_munich.glb"
+            },
+            {
+                name: "Wanshu",
+                model: "assets/glb/coin_munich.glb"
+            },
+            {
+                name: "Joonas Luukkonen",
+                model: "assets/glb/medal_jonas_luukkonen.glb"
+            },
+            {
+                name: "Annalisa",
+                model: "assets/glb/coin_munich.glb"
+            },
+            {
+                name: "Giacomo",
+                model: "assets/glb/coin_munich.glb"
+            },
+            {
+                name: "Udita",
+                model: "assets/glb/coin_leipzig.glb"
+            }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const grid = document.getElementById('team-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            
+            TEAM_MEMBERS.forEach(member => {
+                const card = document.createElement('div');
+                card.className = 'team-card';
+                card.innerHTML = `
+                    <div class="coin-viewer-wrapper" title="Click to flip the coin!">
+                        <model-viewer 
+                            src="${member.model}" 
+                            auto-rotate 
+                            camera-controls 
+                            disable-zoom
+                            disable-pan
+                            shadow-intensity="0.6"
+                            style="width: 100%; height: 100%;"
+                            class="team-coin-model">
+                        </model-viewer>
+                    </div>
+                    <h3>${member.name}</h3>
+                `;
+                
+                const wrapper = card.querySelector('.coin-viewer-wrapper');
+                wrapper.addEventListener('click', () => {
+                    if (wrapper.classList.contains('flipping')) return;
+                    wrapper.classList.add('flipping');
+                    setTimeout(() => {
+                        wrapper.classList.remove('flipping');
+                    }, 1000);
+                });
+                
+                grid.appendChild(card);
+            });
+        });
+    </script>
+</body>
+</html>
