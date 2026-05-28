@@ -134,6 +134,13 @@ document.addEventListener("DOMContentLoaded", () => {
     initControls();
     loadData();
     initMobileDrawer();
+    
+    // Invalidate Leaflet map size on window resize (e.g. mobile orientation changes)
+    window.addEventListener('resize', () => {
+        if (state.map) {
+            state.map.invalidateSize();
+        }
+    });
 });
 
 // Helper to wait for initial 3D models to finish loading
@@ -234,9 +241,11 @@ function initTabs() {
             
             // Handle Leaflet re-size re-draw when switching to Map tab
             if (targetTab === 'map-tab' && state.map) {
-                setTimeout(() => {
-                    state.map.invalidateSize();
-                }, 100);
+                [50, 150, 300, 600].forEach(delay => {
+                    setTimeout(() => {
+                        state.map.invalidateSize();
+                    }, delay);
+                });
             }
             
             // Lazy load the team cabinet when switching to the About the Team tab
@@ -1049,8 +1058,14 @@ function drag() {
 // LEAFLET SPATIAL MAP CONTROLLER
 // ==========================================================================
 function initMap() {
-    // Point at Central Europe / Holy Roman Empire
-    state.map = L.map('map-container').setView([50.5, 11.5], 6);
+    // Point at Central Europe / Holy Roman Empire - adapt view dynamically for mobile
+    const isMobile = window.innerWidth <= 768;
+    const zoomLevel = isMobile ? 4.5 : 6;
+    const centerLatLng = isMobile ? [50.2, 11.0] : [50.5, 11.5];
+    
+    state.map = L.map('map-container', {
+        zoomSnap: 0.5
+    }).setView(centerLatLng, zoomLevel);
     
     // Premium dark thematic tiles (CartoDB Dark Matter)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
