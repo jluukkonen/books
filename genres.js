@@ -100,6 +100,7 @@ const endYearLbl = document.getElementById("end-year-lbl");
 const timelineVal = document.getElementById("timeline-val");
 const smoothingSlider = document.getElementById("smoothing-slider");
 const smoothingVal = document.getElementById("smoothing-val");
+const crisisToggle = document.getElementById("crisis-toggle");
 
 const filterGenresBtn = document.getElementById("filter-genres-btn");
 const filterDrawer = document.getElementById("filter-drawer");
@@ -218,6 +219,11 @@ window.addEventListener("DOMContentLoaded", async () => {
         radio.addEventListener("change", () => {
             updateChart();
         });
+    });
+
+    // Crisis Overlay Toggle
+    crisisToggle.addEventListener("change", () => {
+        updateChart();
     });
 
     // Search filters
@@ -568,6 +574,62 @@ function updateChart() {
         });
     }
 
+    // Custom Crisis Drawing Plugin
+    const showCrises = crisisToggle.checked;
+    const crisisPlugin = {
+        id: 'crisisOverlays',
+        beforeDraw: (chart) => {
+            if (!showCrises) return;
+            const { ctx, chartArea: { top, bottom, left, right }, scales: { x } } = chart;
+            ctx.save();
+            
+            const crises = [
+                { start: 1618, end: 1648, label: "Thirty Years' War (1618-1648)", color: 'rgba(239, 68, 68, 0.07)', textColor: 'rgba(239, 68, 68, 0.6)' },
+                { start: 1756, end: 1763, label: "Seven Years' War (1756-1763)", color: 'rgba(239, 68, 68, 0.07)', textColor: 'rgba(239, 68, 68, 0.6)' }
+            ];
+            
+            crises.forEach(crisis => {
+                const xStartVal = x.getPixelForValue(crisis.start);
+                const xEndVal = x.getPixelForValue(crisis.end);
+                
+                const drawStart = Math.max(left, xStartVal);
+                const drawEnd = Math.min(right, xEndVal);
+                
+                if (drawStart < drawEnd) {
+                    // Draw shaded rectangle
+                    ctx.fillStyle = crisis.color;
+                    ctx.fillRect(drawStart, top, drawEnd - drawStart, bottom - top);
+                    
+                    // Draw border lines
+                    ctx.strokeStyle = 'rgba(239, 68, 68, 0.15)';
+                    ctx.lineWidth = 1.2;
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    if (xStartVal >= left && xStartVal <= right) {
+                        ctx.moveTo(xStartVal, top);
+                        ctx.lineTo(xStartVal, bottom);
+                    }
+                    if (xEndVal >= left && xEndVal <= right) {
+                        ctx.moveTo(xEndVal, top);
+                        ctx.lineTo(xEndVal, bottom);
+                    }
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    
+                    // Draw label text (only if there is enough space)
+                    if (drawEnd - drawStart > 75) {
+                        ctx.fillStyle = crisis.textColor;
+                        ctx.font = 'italic 9.5px Inter, sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(crisis.label, drawStart + (drawEnd - drawStart) / 2, top + 15);
+                    }
+                }
+            });
+            
+            ctx.restore();
+        }
+    };
+
     // Render in canvas
     const ctx = document.getElementById("chart-genre-timeline").getContext("2d");
     
@@ -581,6 +643,7 @@ function updateChart() {
             labels: yearsRange,
             datasets: datasets
         },
+        plugins: [crisisPlugin],
         options: {
             responsive: true,
             maintainAspectRatio: false,
