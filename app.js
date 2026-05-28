@@ -1346,10 +1346,6 @@ function updateMapMarkers() {
             if (data.confession === "Catholic") color = "#d4af37";
             else if (data.confession === "Protestant") color = "#5b21b6";
             
-            let markerImg = "assets/markers/mixed_marker.jpg";
-            if (data.confession === "Catholic") markerImg = "assets/markers/catholic_marker.jpg";
-            else if (data.confession === "Protestant") markerImg = "assets/markers/protestant_marker.jpg";
-            
             const tooltipHTML = `
                 <div style="font-family: inherit; font-size:12px;">
                     <strong style="font-size:13px; color:#ffffff;">${city}</strong><br/>
@@ -1385,9 +1381,9 @@ function updateMapMarkers() {
                         wrapper.style.width = '100%';
                         wrapper.style.height = '100%';
                     }
-                    const img = el.querySelector('img');
-                    if (img) {
-                        img.src = markerImg;
+                    const markerImgWrapper = el.querySelector('.marker-image-wrapper');
+                    if (markerImgWrapper) {
+                        markerImgWrapper.style.backgroundColor = color;
                     }
                 }
                 
@@ -1395,8 +1391,7 @@ function updateMapMarkers() {
             } else {
                 const divIcon = L.divIcon({
                     html: `<div class="custom-map-marker-wrapper ${markerClasses.join(' ')}" style="width:${iconSize}px; height:${iconSize}px;">
-                             <div class="marker-image-wrapper" style="width:100%; height:100%;">
-                                 <img src="${markerImg}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                             <div class="marker-image-wrapper" style="width:100%; height:100%; background-color:${color};">
                              </div>
                            </div>`,
                     className: 'custom-map-marker',
