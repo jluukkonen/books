@@ -1954,7 +1954,7 @@ const TEAM_MEMBERS = [
     },
     {
         name: "Joonas Luukkonen",
-        model: "assets/glb/medal_jonas_luukkonen.glb"
+        model: "assets/glb/coin_leipzig.glb"
     },
     {
         name: "Annalisa",
