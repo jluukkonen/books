@@ -1427,24 +1427,6 @@ function updateMapMarkers() {
                     const connSection = document.getElementById('section-connections');
                     if (connSection) connSection.classList.add('hidden');
                     
-                    const cityAssetMap = {
-                        "Leipzig": "leipzig",
-                        "Frankfurt am Main": "frankfurt",
-                        "Köln": "cologne",
-                        "München": "munich",
-                        "Wien": "vienna"
-                    };
-                    const assetName = cityAssetMap[city];
-                    const cityImgSection = document.getElementById('section-city-image');
-                    const cityImg = document.getElementById('sidebar-city-image');
-                    
-                    if (assetName && cityImg && cityImgSection) {
-                        cityImg.src = `assets/hubs/city_${assetName}.jpg`;
-                        cityImgSection.classList.remove('hidden');
-                    } else if (cityImgSection) {
-                        cityImgSection.classList.add('hidden');
-                    }
-                    
                     // Show city 3D model
                     const cityGLBMap = {
                         "Leipzig": "coin_leipzig.glb",
