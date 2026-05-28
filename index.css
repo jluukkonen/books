@@ -985,17 +985,19 @@ input[type="range"]::-moz-range-progress {
    LOADING SPINNERS & SYSTEM ELEMENTS
    ========================================================================== */
 .loading-overlay {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
+    width: 100vw;
+    height: 100vh;
     background-color: #0b0f19;
     background-image: url('assets/branding/grey_parchment.jpg');
     background-size: cover;
     background-blend-mode: multiply;
     opacity: 0.98;
-    z-index: 100;
+    z-index: 9999;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1690,7 +1692,7 @@ input[type="range"]::-moz-range-progress {
     }
     
     body.fixed-layout #network-container {
-        height: 100% !important;
+        height: 0 !important;
         flex-grow: 1 !important;
     }
     
@@ -1701,7 +1703,7 @@ input[type="range"]::-moz-range-progress {
     }
     
     body.fixed-layout #map-container {
-        height: 100% !important;
+        height: 0 !important;
         flex-grow: 1 !important;
         width: 100% !important;
     }
@@ -1718,16 +1720,9 @@ input[type="range"]::-moz-range-progress {
         padding-bottom: 80px !important;
     }
 
-    /* Loading overlay fullscreen escape */
+    /* Loading overlay fullscreen is already fixed, just ensure z-index overrides on mobile */
     .loading-overlay {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        z-index: 9999 !important;
+        z-index: 99999 !important;
     }
     
     .loading-title {

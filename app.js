@@ -1097,6 +1097,14 @@ function initMap() {
         .catch(err => console.error("Error loading HRE boundary GeoJSON:", err));
         
     updateMapMarkers();
+    
+    // Safety invalidation timeouts to ensure map sizes correctly inside hidden tabs
+    setTimeout(() => {
+        if (state.map) state.map.invalidateSize();
+    }, 100);
+    setTimeout(() => {
+        if (state.map) state.map.invalidateSize();
+    }, 500);
 }
 
 // Get color hex code for a city confession
