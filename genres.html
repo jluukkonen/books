@@ -11,41 +11,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
     
     <!-- CSS Dependencies -->
-    <link rel="stylesheet" href="index.css?v=10">
+    <link rel="stylesheet" href="index.css?v=11">
     
     <!-- JS Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         /* Genre page overrides */
-        .genre-checklist-container {
-            max-height: 280px;
-            overflow-y: auto;
-            background: rgba(15, 23, 42, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
-            padding: 8px 12px;
-            margin-top: 6px;
-        }
-        .genre-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 11.5px;
-            color: #cbd5e1;
-            padding: 4px 0;
-            cursor: pointer;
-        }
-        .genre-item input {
-            cursor: pointer;
-            accent-color: #0284c7;
-        }
         .slider-group {
             background: rgba(15, 23, 42, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.03);
             padding: 12px;
             border-radius: 8px;
-            margin-top: 15px;
+            margin-top: 12px;
         }
         .slider-header {
             display: flex;
@@ -82,6 +60,17 @@
             outline: none;
             cursor: pointer;
             font-family: 'Inter', sans-serif;
+            text-align: left;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .genre-selector-select::after {
+            content: "▼";
+            font-size: 9px;
+            color: #94a3b8;
+            margin-left: 8px;
         }
         .nav-home-btn {
             background: rgba(255, 255, 255, 0.05);
@@ -96,11 +85,182 @@
             gap: 6px;
             transition: all 0.2s ease;
             border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
         }
         .nav-home-btn:hover {
             background: rgba(255, 255, 255, 0.1);
             color: #f8fafc;
             border-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Custom select dropdown styling */
+        .custom-select-container {
+            position: relative;
+            width: 100%;
+        }
+        .select-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            margin-top: 4px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            z-index: 110;
+            max-height: 320px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .select-dropdown-menu.hidden {
+            display: none;
+        }
+        .dropdown-checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #cbd5e1;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+        .dropdown-checkbox-item:hover {
+            background: rgba(255,255,255,0.05);
+            color: #f8fafc;
+        }
+        .dropdown-checkbox-item input {
+            cursor: pointer;
+            accent-color: #38bdf8;
+        }
+        
+        /* Sliding Drawer Styles */
+        .filter-drawer {
+            position: fixed;
+            top: 0;
+            right: -760px; /* Hidden by default */
+            width: 740px;
+            height: 100%;
+            background: #0f172a;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+        .filter-drawer.open {
+            right: 0;
+        }
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+        }
+        .drawer-header h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: #f8fafc;
+            margin: 0;
+        }
+        .drawer-close-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 28px;
+            cursor: pointer;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+        .drawer-close-btn:hover {
+            color: #f8fafc;
+        }
+        .drawer-content {
+            display: flex;
+            gap: 16px;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        .drawer-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 12px;
+            overflow: hidden;
+        }
+        .drawer-col h4 {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-top: 0;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .search-input {
+            width: 100%;
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            outline: none;
+            margin-bottom: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+        .checklist-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding-right: 4px;
+        }
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11.5px;
+            color: #cbd5e1;
+            padding: 4px 0;
+            cursor: pointer;
+            transition: color 0.15s ease;
+        }
+        .checklist-item:hover {
+            color: #f8fafc;
+        }
+        .checklist-item input {
+            cursor: pointer;
+            accent-color: #38bdf8;
+        }
+        
+        /* Responsive rules */
+        @media (max-width: 768px) {
+            .filter-drawer {
+                width: 100%;
+                right: -100%;
+            }
+            .drawer-content {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            .drawer-col {
+                height: auto;
+                max-height: 280px;
+                margin-bottom: 12px;
+            }
         }
     </style>
 </head>
@@ -119,34 +279,73 @@
             </div>
             
             <!-- Controls Box -->
-            <div class="panel controls-panel">
+            <div class="panel controls-panel" style="flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto;">
                 <h2>Select Publishing City</h2>
                 <div class="control-group">
-                    <select id="city-selector" class="genre-selector-select">
-                        <option value="all cities" selected>All Cities Combined</option>
-                        <option value="leipzig">Leipzig</option>
-                        <option value="wittenberg">Wittenberg</option>
-                        <option value="jena">Jena</option>
-                        <option value="köln">Köln (Cologne)</option>
-                        <option value="frankfurt">Frankfurt (Main)</option>
-                        <option value="augsburg">Augsburg</option>
-                        <option value="berlin">Berlin</option>
-                        <option value="nürnberg">Nürnberg</option>
-                        <option value="straßburg">Straßburg</option>
-                        <option value="halle">Halle</option>
-                        <option value="helmstedt">Helmstedt</option>
-                        <option value="hamburg">Hamburg</option>
-                        <option value="dresden">Dresden</option>
-                        <option value="rostock">Rostock</option>
-                        <option value="wien">Wien (Vienna)</option>
-                        <option value="tübingen">Tübingen</option>
-                        <option value="erfurt">Erfurt</option>
-                        <option value="basel">Basel</option>
-                        <option value="göttingen">Göttingen</option>
-                        <option value="münchen">München (Munich)</option>
-                    </select>
+                    <div class="custom-select-container">
+                        <button id="city-select-btn" class="genre-selector-select" type="button">All Cities Combined</button>
+                        <div id="city-select-dropdown" class="select-dropdown-menu hidden">
+                            <div style="display: flex; gap: 6px; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); background: #111827;">
+                                <button id="city-select-all" class="btn btn-secondary" style="font-size: 10px; padding: 4px 8px; flex-grow: 1;" type="button">Select All</button>
+                                <button id="city-deselect-all" class="btn btn-secondary" style="font-size: 10px; padding: 4px 8px; flex-grow: 1;" type="button">Deselect All</button>
+                            </div>
+                            <div id="city-checkbox-list" style="overflow-y: auto; flex-grow: 1; padding: 6px 0;">
+                                <!-- Filled dynamically via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Combined vs Separate mode (Only visible when multi-select active) -->
+                <div id="city-mode-group" class="slider-group" style="display: none;">
+                    <span class="slider-label" style="display: block; margin-bottom: 8px;">City Display Mode</span>
+                    <div style="display: flex; gap: 16px; font-size: 12px; color: #cbd5e1;">
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="city-mode" value="combined" checked style="cursor: pointer; accent-color: #38bdf8;"> Combined
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="city-mode" value="separate" style="cursor: pointer; accent-color: #38bdf8;"> Separate
+                        </label>
+                    </div>
                 </div>
                 
+                <!-- Display Level selector -->
+                <div class="slider-group">
+                    <span class="slider-label" style="display: block; margin-bottom: 8px;">Display Taxonomy Level</span>
+                    <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: #cbd5e1;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="display-level" value="0" style="accent-color: #38bdf8; cursor: pointer;"> Level 0 — Total Matching Books
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="display-level" value="1" checked style="accent-color: #38bdf8; cursor: pointer;"> Level 1 — General Categories
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="display-level" value="2" style="accent-color: #38bdf8; cursor: pointer;"> Level 2 — Mid-level Categories
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="display-level" value="3" style="accent-color: #38bdf8; cursor: pointer;"> Level 3 — Specific Genres
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Timeline range zoom slider -->
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">Timeline Range</span>
+                        <span id="timeline-val" class="slider-val">1500 - 1800</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #94a3b8;">
+                            <span>Start: <span id="start-year-lbl" style="color: #cbd5e1; font-weight: 500;">1500</span></span>
+                            <input type="range" id="start-year-slider" min="1500" max="1800" value="1500" step="1" style="width: 70%; accent-color: #38bdf8; cursor: pointer;">
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #94a3b8;">
+                            <span>End: <span id="end-year-lbl" style="color: #cbd5e1; font-weight: 500;">1800</span></span>
+                            <input type="range" id="end-year-slider" min="1500" max="1800" value="1800" step="1" style="width: 70%; accent-color: #38bdf8; cursor: pointer;">
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Smoothing Slider -->
                 <div class="slider-group">
                     <div class="slider-header">
@@ -155,33 +354,31 @@
                     </div>
                     <input type="range" id="smoothing-slider" class="range-slider" min="1" max="25" value="5" step="1">
                 </div>
-            </div>
-            
-            <!-- Genre Checklist Box -->
-            <div class="panel controls-panel" style="flex-grow: 1; display: flex; flex-direction: column;">
-                <h2>Filter Print Genres (Level 1)</h2>
-                <div style="display: flex; gap: 8px; margin-bottom: 6px;">
-                    <button id="btn-select-all" class="btn btn-secondary" style="font-size: 10px; padding: 4px 8px; flex-grow: 1;">Select All</button>
-                    <button id="btn-deselect-all" class="btn btn-secondary" style="font-size: 10px; padding: 4px 8px; flex-grow: 1;">Deselect All</button>
-                </div>
-                <div id="genre-checklist" class="genre-checklist-container" style="flex-grow: 1;">
-                    <!-- Filled dynamically -->
+                
+                <div style="margin-top: 15px; font-size: 11px; color: #64748b; line-height: 1.4; padding: 0 4px;">
+                    Precomputed from duckdb parquets. Omitted zeros are treated as gaps. Applied 20 canonical HRE printing hubs.
                 </div>
             </div>
         </aside>
         
         <!-- Main Content Area -->
-        <main class="main-content" style="overflow: hidden; height: 100vh; display: flex; flex-direction: column;">
+        <main class="main-content" style="overflow: hidden; height: 100vh; display: flex; flex-direction: column; position: relative;">
             <nav class="tabs-bar">
                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                     <div>
                         <h2 style="font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; color: #f8fafc; margin: 0;">Print Genre Timeline Explorer</h2>
                         <p style="font-size: 12px; color: #94a3b8; margin: 4px 0 0 0; font-family: 'Inter', sans-serif;">Tracking subject matter trends in publications across three centuries.</p>
                     </div>
-                    <a href="index.html" class="nav-home-btn">
-                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                        <span>Portal Home</span>
-                    </a>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="filter-genres-btn" class="nav-home-btn" style="background: rgba(2, 132, 199, 0.2); color: #38bdf8; border-color: rgba(2, 132, 199, 0.4);" type="button">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            <span>Filter Genres</span>
+                        </button>
+                        <a href="index.html" class="nav-home-btn">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                            <span>Portal Home</span>
+                        </a>
+                    </div>
                 </div>
             </nav>
             
@@ -194,6 +391,52 @@
                     </div>
                     <div class="chart-wrapper" style="flex-grow: 1; height: calc(100% - 40px); position: relative;">
                         <canvas id="chart-genre-timeline"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sliding Filter Drawer Panel -->
+            <div id="filter-drawer" class="filter-drawer">
+                <div class="drawer-header">
+                    <h3>Filter Taxonomy Categories</h3>
+                    <button id="drawer-close-btn" class="drawer-close-btn" type="button">&times;</button>
+                </div>
+                <div class="drawer-content">
+                    <!-- Column 1: Level 1 -->
+                    <div class="drawer-col" id="col-l1">
+                        <h4>Level 1 — General</h4>
+                        <input type="text" id="l1-search" placeholder="Search level 1..." class="search-input">
+                        <div style="margin-bottom: 8px; display: flex; gap: 6px;">
+                            <button id="l1-select-all" class="btn btn-secondary" style="font-size: 9.5px; padding: 3px 6px; flex-grow: 1;" type="button">All</button>
+                            <button id="l1-deselect-all" class="btn btn-secondary" style="font-size: 9.5px; padding: 3px 6px; flex-grow: 1;" type="button">None</button>
+                        </div>
+                        <div class="checklist-container" id="l1-checklist">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                    <!-- Column 2: Level 2 -->
+                    <div class="drawer-col" id="col-l2">
+                        <h4>Level 2 — Mid-level</h4>
+                        <input type="text" id="l2-search" placeholder="Search level 2..." class="search-input">
+                        <div style="margin-bottom: 8px; display: flex; gap: 6px;">
+                            <button id="l2-select-all" class="btn btn-secondary" style="font-size: 9.5px; padding: 3px 6px; flex-grow: 1;" type="button">All</button>
+                            <button id="l2-deselect-all" class="btn btn-secondary" style="font-size: 9.5px; padding: 3px 6px; flex-grow: 1;" type="button">None</button>
+                        </div>
+                        <div class="checklist-container" id="l2-checklist">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                    <!-- Column 3: Level 3 -->
+                    <div class="drawer-col" id="col-l3">
+                        <h4>Level 3 — Specific</h4>
+                        <input type="text" id="l3-search" placeholder="Search level 3..." class="search-input">
+                        <div style="margin-bottom: 8px; display: flex; gap: 6px;">
+                            <button id="l3-select-all" class="btn btn-secondary" style="font-size: 9.5px; padding: 3px 6px; flex-grow: 1;" type="button">All</button>
+                            <button id="l3-deselect-all" class="btn btn-secondary" style="font-size: 9.5px; padding: 3px 6px; flex-grow: 1;" type="button">None</button>
+                        </div>
+                        <div class="checklist-container" id="l3-checklist">
+                            <!-- Populated dynamically -->
+                        </div>
                     </div>
                 </div>
             </div>
