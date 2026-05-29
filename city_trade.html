@@ -127,6 +127,12 @@
             margin: 4px 0 0 0;
             font-family: 'Inter', sans-serif;
         }
+        @media (max-width: 768px) {
+            body.fixed-layout .main-content {
+                overflow-y: auto !important;
+                padding-bottom: 80px !important;
+            }
+        }
     </style>
 </head>
 <body class="fixed-layout">
